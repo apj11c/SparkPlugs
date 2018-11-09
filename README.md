@@ -31,6 +31,9 @@ When user creates authentic account, should automatically set up basic user doc 
 
 
 Future:
+
 Add string to history spots containing buyer's userid
+
 Add purchased spots to "purchases" collection
+
 Options for spot expiration dates?
