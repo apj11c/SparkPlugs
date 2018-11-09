@@ -8,12 +8,19 @@ linkSpot: create dummy spot in users/<userid>/listings/ when it is created in sp
 moveToHistory: when spots/<spotid> is updated to change fullfilled = true, populate users/<userid>/history with spot info
 
 Implications:
+
 When adding parking spot: document to spots/ when creating spot; payload must contain:
+                 
                  typename string description;
+                 
                  typename string location;
+                 
                  typename number price;
+                 
                  typename latlng geoloc;
+                 
                  typename boolean fulfilled = false;
+                 
                  typename string userid = request.auth.uid;
                  
 When deleting spot: delete only document inside users/<userid>/listings/
