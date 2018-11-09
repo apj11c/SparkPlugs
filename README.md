@@ -11,6 +11,7 @@ linkSpot: create dummy spot in users/[userid]/listings/ when it is created in sp
   
 moveToHistory: when spots/[spotid] is updated to change fullfilled = true, populate users/[userid]/history with spot info
 
+===============================================================================================================================
 
 Implications:
 
@@ -29,6 +30,7 @@ When parking spot transaction is successful: admin service worker updates spots/
   
 When user creates authentic account, should automatically set up basic user doc stuff
 
+===============================================================================================================================
 
 Future:
 
@@ -36,4 +38,4 @@ Add string to history spots containing buyer's userid
 
 Add purchased spots to "purchases" collection
 
-Options for spot expiration dates?
+Options for offer expiration dates?
