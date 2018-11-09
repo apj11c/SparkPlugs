@@ -9,7 +9,7 @@ deleteSpot: when users/[userid]/listings/[spotid] is deleted, delete the real sp
   
 linkSpot: create dummy spot in users/[userid]/listings/ when it is created in spots/
   
-moveToHistory: when spots/[spotid] is updated to change fullfilled = true, populate users/<userid>/history with spot info
+moveToHistory: when spots/[spotid] is updated to change fullfilled = true, populate users/[userid]/history with spot info
 
 
 Implications:
