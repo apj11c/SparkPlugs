@@ -14,7 +14,7 @@ moveToHistory: when spots/[spotid] is updated to change fullfilled = true, popul
 
 Implications:
 
-When adding parking spot: document to spots/ when creating spot; payload must contain:
+When adding parking spot: create document in spots/; payload must contain:
                  
                  typename string description;
                  
@@ -30,7 +30,7 @@ When adding parking spot: document to spots/ when creating spot; payload must co
                  
 When deleting spot: delete only document inside users/[userid]/listings/
   
-When transaction parking spot transaction is successful: admin privileges update spots/[spotid] to change fulfilled to true
+When parking spot transaction is successful: admin service worker updates spots/[spotid] to set fulfilled = true -- NOT USER
   
 When user creates authentic account, should automatically set up basic user doc stuff
 
