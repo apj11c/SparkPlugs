@@ -2,10 +2,15 @@
 Database functions:
 
 createUserDoc: when new user is authenticated, creates user doc
+
 createUserData: when new user doc is created, creates private and public data placeholders in it
+
 deleteSpot: when users/<userid>/listings/<spotid> is deleted, delete the real spot id from spots/
+  
 linkSpot: create dummy spot in users/<userid>/listings/ when it is created in spots/
+  
 moveToHistory: when spots/<spotid> is updated to change fullfilled = true, populate users/<userid>/history with spot info
+
 
 Implications:
 
