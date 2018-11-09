@@ -17,15 +17,10 @@ Implications:
 When adding parking spot: create document in spots/; payload must contain:
                  
                  typename string description;
-                 
                  typename string location;
-                 
                  typename number price;
-                 
                  typename latlng geoloc;
-                 
                  typename boolean fulfilled = false;
-                 
                  typename string userid = request.auth.uid;
                  
 When deleting spot: delete only document inside users/[userid]/listings/
@@ -34,3 +29,8 @@ When parking spot transaction is successful: admin service worker updates spots/
   
 When user creates authentic account, should automatically set up basic user doc stuff
 
+
+Future:
+Add string to history spots containing buyer's userid
+Add purchased spots to "purchases" collection
+Options for spot expiration dates?
