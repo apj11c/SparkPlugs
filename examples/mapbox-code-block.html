@@ -30,10 +30,6 @@
         accessToken: mapboxgl.accessToken
       });
       document.getElementById('geocoder').appendChild(geocoder.onAdd(map));
-
-      // Initialize the FirebaseUI Widget using Firebase.
-      var ui = new firebaseui.auth.AuthUI(firebase.auth());
-      // The start method will wait until the DOM is loaded.
       
 /* ////////////////// poorly implemented stuff for addspot, but you can get the gist by looking at it /////////////////////////          
           var clean_location = null;
