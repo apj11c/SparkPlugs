@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset=utf-8 />
+  <title>SparkPlugs home</title>
+
+  <!-- Material Design Theming -->
+  <link rel="stylesheet" href="https://code.getmdl.io/1.1.3/material.orange-indigo.min.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+  <script defer src="https://code.getmdl.io/1.1.3/material.min.js"></script>
+  
+  <!-- Mapbox includes -->
+  <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.51.0/mapbox-gl.js'></script>
+  <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.51.0/mapbox-gl.css' rel='stylesheet' />
+  <script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v2.3.0/mapbox-gl-geocoder.min.js'></script>
+  <link rel='stylesheet' href='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v2.3.0/mapbox-gl-geocoder.css' type='text/css' />
+  <script
+	src="https://code.jquery.com/jquery-3.3.1.min.js"
+	integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+	crossorigin="anonymous">
+  </script>
+  <link rel="stylesheet" href="main.css">
+
+  <!-- Import and configure the Firebase SDK -->
+  <!-- These scripts are made available when the app is served or deployed on Firebase Hosting -->
+  <!-- If you do not serve/host your project using Firebase Hosting see https://firebase.google.com/docs/web/setup -->
+  <script src="/__/firebase/5.5.8/firebase-app.js"></script>
+  <script src="/__/firebase/5.5.8/firebase-functions.js"></script>
+  <script src="/__/firebase/5.5.8/firebase-auth.js"></script>
+  <script src="/__/firebase/5.5.8/firebase-firestore.js"></script>
+  <script src="/__/firebase/init.js"></script>
+  <script src="https://cdn.firebase.com/libs/firebaseui/3.4.1/firebaseui.js"></script>
+  <link type="text/css" rel="stylesheet" href="https://cdn.firebase.com/libs/firebaseui/3.4.1/firebaseui.css" />
+  
+  <style>
+
+  </style>
+  
+  <script type="text/javascript">
+    // firebase stuff ==================================================================================
+        const db = firebase.firestore();
+        // premade, easy, aesthetic signup/signin
+        var uiConfig = {
+        signInSuccessUrl: 'https://sparkplugs-9e14b.firebaseapp.com/userpage.html',
+        signInOptions: [
+          // Leave the lines as is for the providers you want to offer your users.
+          {
+            provider: firebase.auth.GoogleAuthProvider.PROVIDER_ID,
+            authMethod: 'https://accounts.google.com',
+            clientId: '796632565617-v1qf084h1t916tddml4ech8paef4bel0.apps.googleusercontent.com'
+          },
+          firebase.auth.EmailAuthProvider.PROVIDER_ID
+          //firebase.auth.FacebookAuthProvider.PROVIDER_ID,
+          //firebase.auth.TwitterAuthProvider.PROVIDER_ID,
+          //firebase.auth.GithubAuthProvider.PROVIDER_ID,
+          //firebaseui.auth.AnonymousAuthProvider.PROVIDER_ID
+        ],
+        credentialHelper: firebaseui.auth.CredentialHelper.GOOGLE_YOLO,
+        // tosUrl and privacyPolicyUrl accept either url string or a callback
+        // function.
+        // Terms of service url/callback.
+        tosUrl: 'https://sparkplugs-9e14b.firebaseapp.com/TOS.html',
+        // Privacy policy url/callback.
+        privacyPolicyUrl: function() {
+          window.location.assign('https://sparkplugs-9e14b.firebaseapp.com/Privacy.html');
+        }
+      };
+      
+      // signout onclick
+      window.signOut = function signOut() {
+        if (firebase.auth().currentUser) {
+          firebase.auth().signOut();
+        }
+      }
+
+      // Initialize the FirebaseUI Widget using Firebase.
+      var ui = new firebaseui.auth.AuthUI(firebase.auth());
+      // The start method will wait until the DOM is loaded.
+
+      // Track auth state
+      initApp = function() {
+      firebase.auth().onAuthStateChanged(function(user) {
+        if (user) {
+          // User is signed in.
+          
+//////////// everything you want an authenticated user to be able to see or do, you put in this if statement /////////////////////////
+//////////// similar logic for the else statement down a ways ////////////////////////////////////////////////////////////////////////
+          
+          // a bunch of variables you can grab from auth
+          /*var displayName = user.displayName;
+          var email = user.email;
+          var emailVerified = user.emailVerified;
+          var photoURL = user.photoURL;
+          var uid = user.uid;
+          var phoneNumber = user.phoneNumber;
+          var providerData = user.providerData;*/
+          
+		  /*
+          document.getElementById('auth-name').textContent = "display name: " + user.displayName;
+          document.getElementById('auth-email').textContent = "email: " + user.email;
+          document.getElementById('auth-verified').textContent = "email verified: " + user.emailVerified;
+          document.getElementById('auth-photourl').textContent = "photo url: " + user.photoURL;
+          document.getElementById('auth-uid').textContent = "user id: " + user.uid;
+          document.getElementById('auth-phone').textContent = "phone number: " +user.phoneNumber;
+          document.getElementById('auth-provider').textContent = "user data json dump: " + JSON.stringify(user.providerData);
+          document.getElementById('page-title').textContent = user.displayName + '\'s Profile';
+          */
+          
+          user.getIdToken().then(function(accessToken) {
+
+          // i make the elements visible here for demonstration
+            document.getElementById('sign-out-div').style.display = "inline";
+            //document.getElementById('auth-profile-data').style.display = "inline";
+            //document.getElementById('listings').style.display = "inline";
+            //document.getElementById('data').style.display = "inline";
+            document.getElementById('output').style.display = "inline";
+          
+          });
+          
+          function enableBtn(button) {
+            button.disabled=false;
+          }
+          
+          window.viewBack = function viewBack() {
+            document.getElementById('spot-info').style.display = "none";
+          }
+          
+///////////////////// all database get() queries must be performed inside callback ///////////////////////////////          
+
+          function viewDetails(spotid) {
+            db.collection("spots").doc(spotid).get()
+            .then(docRef => {
+                document.getElementById('spot-info').style.display = "inline";
+                document.getElementById('spot-location').textContent = "location: " + docRef.data().location;
+                document.getElementById('spot-description').textContent = "description: " + docRef.data().description;
+                document.getElementById('spot-price').textContent = "price: $" + docRef.data().price;
+                document.getElementById('spot-owner').textContent = "userid: " + docRef.data().userid;
+              });
+          }
+          
+///////  dynamically build userpage using auth data ///////////////////////////////////////////////////////////////
+     //  could put only the userid into the spots/<spotid> document and fill all listing data into users/<userid>/listings/<spotid> for less database queries here
+                  
+          var listings = [];
+          var appendTo = document.getElementById('listings');
+          
+          db.collection("users").doc(user.uid).collection("listings").get().then(function(querySnapshot) {
+            var listings = [];
+            querySnapshot.forEach(function(doc) {
+              var newUl = document.createElement("ul")
+              appendTo.appendChild(newUl);
+            
+              var newLi = document.createElement("li");
+              newLi.appendChild(document.createTextNode(doc.data().location));
+              newLi.id = doc.id;
+              newLi.style.display = "inline-block";
+              newUl.appendChild(newLi);
+              
+              var newBtn = document.createElement("button");
+              newBtn.appendChild(document.createTextNode("Details"));
+              newBtn.id = doc.id + "-details";
+              newBtn.style.display = "inline-block";
+              newBtn.onclick = function() {
+                viewDetails(doc.id);
+              };
+              newLi.appendChild(newBtn);
+              newLi.appendChild(document.createElement("br"));
+            });
+          });
+ 
+
+///////variables needed for mapbox stuff/////////////
+      mapboxgl.accessToken = 'pk.eyJ1Ijoid29zdGVlbjQxNyIsImEiOiJjam9hbnU2YXIwM3V6M3BydGVsZzM0NDh0In0.pUYgvlGhW5rYsfx8wCnP6g';
+      const dataseturl = 'https://api.mapbox.com/datasets/v1/wosteen417/cjoao2i3108mc32o7yu31rc0d/features?access_token=pk.eyJ1Ijoid29zdGVlbjQxNyIsImEiOiJjam9hbnU2YXIwM3V6M3BydGVsZzM0NDh0In0.pUYgvlGhW5rYsfx8wCnP6g.geojson';
+      
+////////////// load map object into 'map' div ///////////////////////////////
+      var map = new mapboxgl.Map({
+        container: 'map',
+        style: 'mapbox://styles/mapbox/streets-v10', // temporary default style
+        zoom: 0
+      });
+      // load spots into map
+      map.on('load', function() {
+        map.addSource('spots', {
+          type: 'geojson',
+          data: dataseturl
+        });
+        map.addLayer({
+         "id": "spots",
+         "type": "symbol",
+         "source": "spots",
+         "layout": {
+            "icon-image": "oslo-metro" // temporary for spot visibility
+          }
+        });
+      });
+          
+///////////// attach mapbox geocoder search bar /////////////////////////////////////
+      var geocoder = new MapboxGeocoder({
+        accessToken: mapboxgl.accessToken
+      });
+      document.getElementById('geocoder').appendChild(geocoder.onAdd(map));
+      // Initialize the FirebaseUI Widget using Firebase.
+      // The start method will wait until the DOM is loaded.
+      
+/* ////////////////// poorly implemented stuff for addspot, but you can get the gist by looking at it /////////////////////////          
+          var clean_location = null;
+          var result = null;
+          var longitude = null;
+          var latitude = null;
+          var longlat = null;
+          
+///////////// listen to geocoder for reult ///////////////////////////////////////////////////////////
+          geocoder.on('result', function(ev) {
+            // if it isnt an address (like the name of just a city) then
+            if (ev.result.properties.address == null && ev.result.address == null) {
+              // display message
+              // document.getElementById('address').style.display = "inline";
+              document.getElementById('address').textContent = "** Please list address for parking spot";
+              document.getElementById('location-test').textContent = JSON.stringify(ev.result); }
+            else {
+            // if it is an address or usable location
+            //populate variables for addSpot
+                   result = ev.result;
+                   clean_location = result.place_name;
+                   longlat = result.center;
+                   latitude = longlat[1];
+                   longitude = longlat[0];
+                   document.getElementById('location-test').textContent = clean_location;
+                  // document.getElementById('address').style.display = "none";
+                 }
+          });
+*/
+ 
+////////////// cloud function call examples //////////////////////////////////////////////////////////////////////////////////////////////
+            // can easily add support for more properties
+          /*
+          var addSpot = firebase.functions().httpsCallable('addSpot');
+          window.AddSpot = function AddSpot(latitude, longitude, price, description, location) {
+              if (clean_location == null) { document.getElementById('location').textContent = "** Please select a valid location"; }
+              else {
+                addSpot({
+                  location: clean_location,
+                  price: Number(document.getElementById('price').value),
+                  description: document.getElementById('description').value,
+                  userid: user.uid,
+                  latitude: latitude,
+                  longitude: longitude
+                })
+                .then(function(result) {
+                   map.getSource('spots').setData(dataseturl);
+                   map.setCenter([longitude, latitude], eventData);
+                  // use some returned value maybe
+                });
+              }
+          }
+          */
+          
+          /*
+          var updateSpot = firebase.functions().httpsCallable('updateSpot');
+          function UpdateSpot(userid, newlatitude, newlongitude, newprice, newdescription, newlocation) {
+              if (userid !== user.uid) { console.log("Nice try"); }
+              else {
+              // calls spot update function with either default fields or new fields
+                updateSpot({
+                  location: document.getElementById('spot-location').textContent,
+                  price: Number(document.getElementById('spot-price').textContent),
+                  description: document.getElementById('spot-description').textContent,
+                  userid: user.uid,
+                  latitude: newlatitude,
+                  longitude: newlongitude
+                })
+                .then(function(result) {
+                  // refresh map with updated spot and center on updated point
+                  map.getSource('spots').setData(dataseturl);
+                  map.setCenter([newlongitude, newlatitude], eventData);
+                  // do something with result data?
+                });
+              }
+          }
+          */
+          
+          /*
+          var deleteSpot = firebase.functions().httpsCallable('deleteSpot');
+          function DeleteSpot(spotid) {
+            deleteSpot({
+              spotid: spotid
+            })
+            .then(() => {
+              // something?
+            });
+          }
+          */
+          
+        } else {
+        
+//////////// user is signed out //////////////////////////////////////////////////////////////////
+
+          ui.start('#firebaseui-auth-container', uiConfig);
+          document.getElementById('sign-out-div').style.display = "none";
+          //document.getElementById('data').style.display = "none";
+          document.getElementById('output').style.display = "none";
+          //document.getElementById('auth-profile-data').style.display = "none";
+          //document.getElementById('listings').style.display = "none";
+          //document.getElementById('page-title').style.display = "none";
+        }
+      }, function(error) {
+        console.log(error);
+      });
+  }
+
+      // make everything work
+      window.addEventListener('load', function() {
+        initApp()
+      });
+      
+  </script>
+  
+</head>
+  <body>
+    <h1>Listings</h1>
+    <div id="geocoder" class="geocoder"></div>
+    <div id="map"></div>
+    <div id="location-test"></div>
+    <div id="address"></div>
+    <div id="data">
+        <input class="mdl-textfield__input" style="display:inline;width:auto;" type="text" id="description" name="description" placeholder="Description"/>
+        <input class="mdl-textfield__input" style="display:inline;width:auto;" type="text" id="price" name="price" placeholder="Price"/>
+        <div id="location"></div>
+        <!--button class = "btn btn-primary" onclick = "AddSpot()">Add Spot</button-->
+	</div>
+    <div id="spot-info" style="display:none">
+        <div id="spot-location"></div>
+        <div id="spot-description"></div>
+        <div id="spot-price"></div>
+        <div id="spot-owner"></div>
+        <button class = "btn btn-primary" onclick = "viewSpotBack()">Back to map</button>
+        <button id="save-changes" class = "btn btn-primary" disabled>Save changes</button>
+    </div>
+    <div id="userpage">
+      <a href="https://sparkplugs-9e14b.firebaseapp.com/userpage.html" type="text/html">View my userpage</a>
+    </div>
+    <div id="output"></div>
+	<div id="sign-out-div">
+      <button class = "btn btn-primary" onclick = "signOut()"><i class="fa fa-sign-out"></i>Log out</button>
+    </div>
+  </body>
+</html>

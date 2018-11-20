@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8' />
+    <title></title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+    
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
+    
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.51.0/mapbox-gl.js'></script>
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.51.0/mapbox-gl.css' rel='stylesheet' />
+    
+        <!-- update the version number as needed -->
+    <script defer src="/__/firebase/5.5.8/firebase-app.js"></script>
+    <!-- include only the Firebase features as you need -->
+    <script defer src="/__/firebase/5.5.8/firebase-auth.js"></script>
+    <script defer src="/__/firebase/5.5.8/firebase-database.js"></script>
+    <script defer src="/__/firebase/5.5.8/firebase-messaging.js"></script>
+    <script defer src="/__/firebase/5.5.8/firebase-storage.js"></script>
+    <!-- initialize the SDK after all desired features are loaded -->
+    <script defer src="/__/firebase/init.js"></script>
+
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+      }
+
+      #map {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 100%;
+      }
+    </style>
+</head>
+<body>
+
+<div id='map'></div>
+
+<script>
+// mapbox stuff
+mapboxgl.accessToken = 'pk.eyJ1Ijoid29zdGVlbjQxNyIsImEiOiJjam9hbnU2YXIwM3V6M3BydGVsZzM0NDh0In0.pUYgvlGhW5rYsfx8wCnP6g';
+const dataseturl = 'https://api.mapbox.com/datasets/v1/wosteen417/cjoao2i3108mc32o7yu31rc0d/features?access_token=pk.eyJ1Ijoid29zdGVlbjQxNyIsImEiOiJjam9hbnU2YXIwM3V6M3BydGVsZzM0NDh0In0.pUYgvlGhW5rYsfx8wCnP6g.geojson';
+
+var map = new mapboxgl.Map({
+  container: 'map',
+  style: 'mapbox://styles/mapbox/streets-v10', // temporary default style
+  zoom: 0
+});
+
+map.on('load', function() {
+    map.addSource('spots', {
+      type: 'geojson',
+      data: dataseturl
+    });
+    map.addLayer({
+      "id": "spots",
+      "type": "symbol",
+      "source": "spots",
+      "layout": {
+        "icon-image": "oslo-metro" // temporary for spot visibility; can use custom icons as long as using custom style with them uploaded
+      }
+    });
+});
+
+// firestore stuff
+
+
+
+</script>
+</body>
+</html>
