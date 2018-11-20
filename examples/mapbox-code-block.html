@@ -1,0 +1,67 @@
+<script>
+///////variables needed for mapbox stuff/////////////
+      mapboxgl.accessToken = 'pk.eyJ1Ijoid29zdGVlbjQxNyIsImEiOiJjam9hbnU2YXIwM3V6M3BydGVsZzM0NDh0In0.pUYgvlGhW5rYsfx8wCnP6g';
+      const dataseturl = 'https://api.mapbox.com/datasets/v1/wosteen417/cjoao2i3108mc32o7yu31rc0d/features?access_token=pk.eyJ1Ijoid29zdGVlbjQxNyIsImEiOiJjam9hbnU2YXIwM3V6M3BydGVsZzM0NDh0In0.pUYgvlGhW5rYsfx8wCnP6g.geojson';
+      
+////////////// load map object into 'map' div ///////////////////////////////
+      var map = new mapboxgl.Map({
+        container: 'map',
+        style: 'mapbox://styles/mapbox/streets-v10', // temporary default style
+        zoom: 0
+      });
+      // load spots into map
+      map.on('load', function() {
+        map.addSource('spots', {
+          type: 'geojson',
+          data: dataseturl
+        });
+        map.addLayer({
+         "id": "spots",
+         "type": "symbol",
+         "source": "spots",
+         "layout": {
+            "icon-image": "oslo-metro" // temporary for spot visibility
+          }
+        });
+      });
+          
+///////////// attach mapbox geocoder search bar /////////////////////////////////////
+      var geocoder = new MapboxGeocoder({
+        accessToken: mapboxgl.accessToken
+      });
+      document.getElementById('geocoder').appendChild(geocoder.onAdd(map));
+
+      // Initialize the FirebaseUI Widget using Firebase.
+      var ui = new firebaseui.auth.AuthUI(firebase.auth());
+      // The start method will wait until the DOM is loaded.
+      
+/* ////////////////// poorly implemented stuff for addspot, but you can get the gist by looking at it /////////////////////////          
+          var clean_location = null;
+          var result = null;
+          var longitude = null;
+          var latitude = null;
+          var longlat = null;
+          
+///////////// listen to geocoder for reult ///////////////////////////////////////////////////////////
+          geocoder.on('result', function(ev) {
+            // if it isnt an address (like the name of just a city) then
+            if (ev.result.properties.address == null && ev.result.address == null) {
+              // display message
+              // document.getElementById('address').style.display = "inline";
+              document.getElementById('address').textContent = "** Please list address for parking spot";
+              document.getElementById('location-test').textContent = JSON.stringify(ev.result); }
+
+            else {
+            // if it is an address or usable location
+            //populate variables for addSpot
+                   result = ev.result;
+                   clean_location = result.place_name;
+                   longlat = result.center;
+                   latitude = longlat[1];
+                   longitude = longlat[0];
+                   document.getElementById('location-test').textContent = clean_location;
+                  // document.getElementById('address').style.display = "none";
+                 }
+          });
+*/
+</script>
