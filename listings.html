@@ -33,7 +33,20 @@
   <link type="text/css" rel="stylesheet" href="https://cdn.firebase.com/libs/firebaseui/3.4.1/firebaseui.css" />
   
   <style>
-
+        #map {
+          top: 75px;
+          left: 0;
+          width: 50%;
+          height: 600px;
+        }
+        .mapboxgl-popup {
+          width: 180px;
+          font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+        }
+        .mapboxgl-popup-content {
+          width: 180px;
+          font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+        }
   </style>
   
   <script type="text/javascript">
@@ -195,12 +208,123 @@
           }
         });
       });
+      
+                window.viewSpot = function viewSpot(fid) {
+
+          //  all database .get() queries must use a callback. for example: 
+          //    collection(collectionName).doc(documentName).get().then(returnedDocumentReference => { all stuff involving returnedDocumentReference });
+          //  a field in the document = returnedDocumentReference.data().field
+          // name (id) of a given document = returnedDocumentReference.id;
+          
+            var spotGet = db.collection("spots").doc(fid).get()
+                    .then((doc) => {
+                      spotGet = doc.data();
+                      var userGet = db.collection("users").doc(spotGet.userid).collection("userdata").doc("public").get()
+                        .then((nextdoc) => {
+                          userGet = nextdoc.data();
+                          var canEdit = user.uid === spotGet.userid;
+                          
+                          if (canEdit) {
+                            document.getElementById('spot-price').contentEditable = "true";
+                            document.getElementById('spot-description').contentEditable = "true";
+                            document.getElementById('save-changes').display = "inline";
+                            var newlatitude = spotGet.geoloc._lat;
+                            var newlongitude =  spotGet.geoloc._long;
+                            geocoder.on('result', function(ev) {
+                              if (ev.result.properties.address == null && ev.result.address == null) {
+                              
+                              // display message
+                              
+                                document.getElementById('spot-location').textContent = "** Please list address for parking spot";
+                                document.getElementById('save-changes').disabled = true;
+                              
+                              } else {
+                                
+                                // if it is an address or usable location
+                                //populate variables for updateSpot
+                                
+                                enableBtn(document.getElementById('save-changes'));
+                                newlatitude = ev.result.center[1];
+                                newlongitude = ev.result.center[0];
+                                document.getElementById('spot-location').textContent = ev.result.place_name;
+                              }
+                            });
+                            var _save = function () {
+                              saveChanges(doc.id, spotGet.userid, newlongitude, newlatitude, document.getElementById('spot-price').textContent, document.getElementById('spot-description').textContent, document.getElementById('spot-location').textContent);
+                            }
+                            
+                            var _change = function() {
+                              if (document.getElementById('spot-location').textContent != "** Please list address for parking spot")
+                                enableBtn(document.getElementById('save-changes'));
+                            }
+                            
+                            document.getElementById('save-changes').removeEventListener('click', _save);
+                            document.getElementById('save-changes').addEventListener('click', _save, false);
+                              
+                            document.getElementById('spot-info').removeEventListener('input', _change);
+                            document.getElementById('spot-info').addEventListener('input', _change, false);
+                          }
+                          else {
+                            document.getElementById('spot-description').contentEditable = "false";
+                            document.getElementById('spot-price').contentEditable = "false";
+                            document.getElementById('save-changes').disabled = true;
+                            document.getElementById('save-changes').display = "none";
+                          }
+            
+                          document.getElementById('map').style.display = "none";
+                          document.getElementById('location-test').style.display = "none";
+                          document.getElementById('address').style.display = "none";
+                          document.getElementById('data').style.display = "none";
+            
+                          document.getElementById('spot-location').textContent = spotGet.location;
+                          document.getElementById('spot-description').textContent = spotGet.description;
+                          document.getElementById('spot-price').textContent = spotGet.price;
+                          document.getElementById('spot-owner').textContent = userGet.username;
+            
+                          document.getElementById('spot-info').style.display = "inline";
+                        });
+                    });
+          }
+          
+          window.viewSpotBack = function viewSpotBack() {
+            document.getElementById('spot-info').style.display = "none";
+            
+            document.getElementById('map').style.display = "inline";
+            document.getElementById('location-test').style.display = "inline";
+            document.getElementById('address').style.display = "inline";
+            document.getElementById('data').style.display = "inline";
+            document.getElementById('save-changes').disabled = true;
+          }
           
 ///////////// attach mapbox geocoder search bar /////////////////////////////////////
       var geocoder = new MapboxGeocoder({
         accessToken: mapboxgl.accessToken
       });
       document.getElementById('geocoder').appendChild(geocoder.onAdd(map));
+      
+////////////// display popup on spots click /////////////////////////////////////////
+      map.on('click', 'spots', function(e) {
+        var clickcoords = e.features[0].geometry.coordinates.slice();
+        
+        // dynamically create button to attach to popup bubble
+        var clickdesc = e.features[0].properties.description+'<div id ="infobutton"><button class = "btn btn-primary" onclick = "viewSpot(\'' + e.features[0].properties.id + '\')">Details</button></div>';
+            
+        while (Math.abs(e.lngLat.lng - clickcoords[0]) > 180) {
+          clickcoords[0] += e.lngLat.lng > clickcoords[0] ? 360 : -360;
+        }
+            
+        new mapboxgl.Popup().setLngLat(clickcoords).setHTML(clickdesc).addTo(map);
+      });
+           
+/////////////// change cursor to pointer when it mouses over spots layer////////////////////////////
+      map.on('mouseenter', 'spots', function () {
+        map.getCanvas().style.cursor = 'pointer';
+      });
+
+/////////////// change it back when it leaves ///////////////////////////////////////////////
+      map.on('mouseleave', 'spots', function () {
+        map.getCanvas().style.cursor = '';
+      });
       // Initialize the FirebaseUI Widget using Firebase.
       // The start method will wait until the DOM is loaded.
       
@@ -321,7 +445,6 @@
   <body>
     <h1>Listings</h1>
     <div id="geocoder" class="geocoder"></div>
-    <div id="map"></div>
     <div id="location-test"></div>
     <div id="address"></div>
     <div id="data">
@@ -341,6 +464,7 @@
     <div id="userpage">
       <a href="https://sparkplugs-9e14b.firebaseapp.com/userpage.html" type="text/html">View my userpage</a>
     </div>
+    <div id="map"></div>
     <div id="output"></div>
 	<div id="sign-out-div">
       <button class = "btn btn-primary" onclick = "signOut()"><i class="fa fa-sign-out"></i>Log out</button>
