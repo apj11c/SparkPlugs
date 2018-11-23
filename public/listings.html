@@ -221,12 +221,9 @@
         document.getElementById('spot-count').textContent = "Number of spots near this location: ...";
         document.getElementById('spot-cheap').textContent = "Cheapest spot near this location: ...";
         var latitude = parseFloat(e.features[0].geometry.coordinates[1]);
-        //console.log(e.features[0].geometry.coordinates[1]);
         var longitude = parseFloat(e.features[0].geometry.coordinates[0]);
-        //console.log(e.features[0].geometry.coordinates[0]);
-        //console.log(JSON.stringify(e.features[0].geometry));
-        var greaterGeoloc = new firebase.firestore.GeoPoint(latitude+0.001,longitude+0.00125);
-        var lesserGeoloc = new firebase.firestore.GeoPoint(latitude-0.001,longitude-0.00125);
+        var greaterGeoloc = new firebase.firestore.GeoPoint(latitude+0.006,longitude+0.016);
+        var lesserGeoloc = new firebase.firestore.GeoPoint(latitude-0.006,longitude-0.016);
         
         var _count = 0;
         var _cheapest = Number.POSITIVE_INFINITY;
@@ -306,10 +303,7 @@
               
             });
           }
-        }).catch(error => {
-          console.error(error);
-        })
-        
+        })        
         .then(() => {
           //finish sorting the partially sorted list
           var b = _node.getElementsByTagName("LI");
@@ -396,19 +390,31 @@
  
 ////////////// cloud function call examples //////////////////////////////////////////////////////////////////////////////////////////////
             // can easily add support for more properties
+
+
+          // AddSpot only works if current authenticated user has "isVerified" and "hasPaymentInfo" booleans set to true in firestore users/<userid>
+          // Can only do this manually until we add simulated payment options and whatever other "verification".
+          //
+          // Call AddSpot by passing a geojson object from the geocoder, i.e.
+          // geocoder.on('result', function(ev) { 
+          //   let price = document.getElementById("price").textContent;
+          //   let description = document.getElementById("description").textContent;
+          //   let geojson = ev.result;
+          //   let _add = AddSpot(geojson, price, description);
+          //
+          //   document.getElementById("add-spot-button").removeEventListener('click', _add);
+          //   document.getElementById("add-spot-button").addEventListener('click', _add, false);
+          // }
           /*
           var addSpot = firebase.functions().httpsCallable('addSpot');
-          function AddSpot(latitude, longitude, price, description, location) {
-              if (location == null) { document.getElementById('location').textContent = "** Please select a valid location"; }
-              else if (userid !== user.uid) { console.log("Nice try"); }
+          function AddSpot(geojson, price, description) {
+              if (!geojson) { document.getElementById('location').textContent = "** Please select a valid location"; }
+              else if (!geojson.address && !geojson.properties.address) { document.getElementById('location').textContent = "** Please select a valid location"; }
               else {
                 addSpot({
-                  location: location,
+                  geojson: geojson,
                   price: Number(price),
-                  description: description,
-                  userid: user.uid,
-                  latitude: latitude,
-                  longitude: longitude
+                  description: description
                 })
                 .then(function(result) {
                    map.getSource('spots').setData(dataseturl);
@@ -419,42 +425,41 @@
           }
           */
           
+          // UpdateSpot only works if current authenticated userid === the userid in the spots/<spotid> document.
+          // Can only change description and price.
+          //
           /*
           var updateSpot = firebase.functions().httpsCallable('updateSpot');
-          function UpdateSpot(userid, newlatitude, newlongitude, newprice, newdescription, newlocation) {
-              if (userid !== user.uid) { console.log("Nice try"); }
-              else {
+          function UpdateSpot(spotid, price, description) {
               // calls spot update function with either default fields or new fields
                 updateSpot({
-                  location: newlocation,
-                  price: Number(newprice),
-                  description: newdescription,
-                  userid: userid,
-                  latitude: newlatitude,
-                  longitude: newlongitude
+                  spotid: spotid,
+                  price: Number(price),
+                  description: description
                 })
                 .then(function(result) {
                   // refresh map with updated spot and center on updated point
                   map.getSource('spots').setData(dataseturl);
                   map.setCenter([newlongitude, newlatitude], eventData);
-                  // do something with result callback?
+                  // do something with result?
                 });
               }
           }
           */
           
+          // DeleteSpot only works if current authenticated userid === the userid in the spots/<spotid> document.
+          //
+          //
           /*
           var deleteSpot = firebase.functions().httpsCallable('deleteSpot');
           function DeleteSpot(spotid) {
-            if (userid !== user.uid) { console.log("Nice try"); }
-            else {
-              deleteSpot({
-                spotid: spotid
-              })
-              .then(function(result) {
-                // something?
-              });
-            }
+            db.collection("spots").doc(spotid).get().then(docRef => {
+                return deleteSpot({
+                  spotid: spotid
+                })
+            }).then(function(result) {
+                  // something?
+            });
           }
           */
           
