@@ -220,17 +220,17 @@
         document.getElementById('spot-location').textContent =   e.features[0].properties.location;
         document.getElementById('spot-count').textContent = "Number of spots near this location: ...";
         document.getElementById('spot-cheap').textContent = "Cheapest spot near this location: ...";
-        var latitude = parseFloat(e.features[0].geometry.coordinates[1]);
-        var longitude = parseFloat(e.features[0].geometry.coordinates[0]);
-        var greaterGeoloc = new firebase.firestore.GeoPoint(latitude+0.006,longitude+0.016);
-        var lesserGeoloc = new firebase.firestore.GeoPoint(latitude-0.006,longitude-0.016);
+        let latitude = parseFloat(e.features[0].geometry.coordinates[1]);
+        let longitude = parseFloat(e.features[0].geometry.coordinates[0]);
+        let greaterGeoloc = new firebase.firestore.GeoPoint(latitude+0.006,longitude+0.016);
+        let lesserGeoloc = new firebase.firestore.GeoPoint(latitude-0.006,longitude-0.016);
         
-        var _count = 0;
-        var _cheapest = Number.POSITIVE_INFINITY;
+        let _count = 0;
+        let _cheapest = Number.POSITIVE_INFINITY;
 
-        var _node = document.getElementById("listings");
+        let _node = document.getElementById("listings");
         //reads raw location from html because js is weird
-        var query = db.collection("spots").where("geoloc", "<=", greaterGeoloc);
+        let query = db.collection("spots").where("geoloc", "<=", greaterGeoloc);
         query = query.where("geoloc", ">=", lesserGeoloc);
         query.get().then(function(querySnapshot) {
           if (querySnapshot.empty) { console.log("No documents found!"); }
@@ -253,20 +253,20 @@
                 
                 // create list
               
-                var newLi = document.createElement("li");
+                let newLi = document.createElement("li");
                 newLi.id = doc.id;
                 newLi.className = "collapsible";
                 newLi.appendChild(document.createTextNode("$"+doc.data().price+" - "+doc.data().location));
                 
-                var newDiv = document.createElement("div");
+                let newDiv = document.createElement("div");
                 newDiv.className = "content";
                 
-                var newP = document.createElement("p");
+                let newP = document.createElement("p");
                 newP.appendChild(document.createTextNode("Description: " + doc.data().description));
                 //newP.class = "content";
                 newDiv.appendChild(newP);
                 
-                var newerP = document.createElement("p");
+                let newerP = document.createElement("p");
                 newerP.appendChild(document.createTextNode("Owner: " + doc.data().owner));
                 //newerP.class = "content";
                 newDiv.appendChild(newerP);
@@ -276,7 +276,7 @@
                   _node.insertBefore(newLi,_node.firstChild);
                 else _node.appendChild(newLi);
               
-                var newBtn = document.createElement("button");
+                let newBtn = document.createElement("button");
                 newBtn.appendChild(document.createTextNode("Reserve this spot"));
                 newBtn.id = doc.id + "-reserve";
                 //newBtn.class = "content";
@@ -290,7 +290,7 @@
                 
                 newLi.addEventListener("click",function() {
                   this.classList.toggle("active");
-                  var content = this.firstChild;
+                  let content = this.firstChild;
                   content = content.nextElementSibling;
                   if (content.style.maxHeight) {
                     content.style.maxHeight = null;
@@ -306,11 +306,11 @@
         })        
         .then(() => {
           //finish sorting the partially sorted list
-          var b = _node.getElementsByTagName("LI");
-          var switching = true;
+          let b = _node.getElementsByTagName("LI");
+          let switching = true;
           while(switching) {
             switching = false;
-            for (var i = 0; i < (b.length - 1); ++i) {
+            for (let i = 0; i < (b.length - 1); ++i) {
               switching = (parseFloat(b[i].textContent.substring(1,b[i].textContent.length)) > parseFloat(b[i+1].textContent.substring(1,b[i+1].textContent.length)));
               if (switching) {
                 b[i].parentNode.insertBefore(b[i+1],b[i]);
@@ -339,7 +339,7 @@
         var spotid = e.features[0].properties.id;
         */
         
-        var _view = function() { ViewSpots(); }
+        const _view = function() { ViewSpots(); }
         
         document.getElementById('output').textContent = JSON.stringify(e.features[0]);
         document.getElementById('view-spots-button').removeEventListener('click', _view);
