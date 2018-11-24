@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset=utf-8 />
+  <title>SparkPlugs - Userpage</title>
+  <link rel="stylesheet" href="userpage.css">
+  
+  <!-- Material Design Theming -->
+  <!-- I DON'T KNOW HOW TO USE THIS -->
+  <link rel="stylesheet" href="https://code.getmdl.io/1.1.3/material.orange-indigo.min.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+  <script defer src="https://code.getmdl.io/1.1.3/material.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/list.js/1.5.0/list.min.js"></script>
+  
+  <!-- Mapbox includes -->
+  <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.51.0/mapbox-gl.js'></script>
+  <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.51.0/mapbox-gl.css' rel='stylesheet' />
+  <script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v2.3.0/mapbox-gl-geocoder.min.js'></script>
+  <link rel='stylesheet' href='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v2.3.0/mapbox-gl-geocoder.css' type='text/css' />
+
+  <!-- Import and configure the Firebase SDK -->
+  <!-- These scripts are made available when the app is served or deployed on Firebase Hosting -->
+  <!-- If you do not serve/host your project using Firebase Hosting see https://firebase.google.com/docs/web/setup -->
+  <script src="/__/firebase/5.5.8/firebase-app.js"></script>
+  <script src="/__/firebase/5.5.8/firebase-functions.js"></script>
+  <script src="/__/firebase/5.5.8/firebase-auth.js"></script>
+  <script src="/__/firebase/5.5.8/firebase-firestore.js"></script>
+  <script src="/__/firebase/init.js"></script>
+  <script src="https://cdn.firebase.com/libs/firebaseui/3.4.1/firebaseui.js"></script>
+  <link type="text/css" rel="stylesheet" href="https://cdn.firebase.com/libs/firebaseui/3.4.1/firebaseui.css" />
+  
+  <style>
+        #everything{position:absolute;top:0px;bottom:0px;left:0px;right:0px;}
+        .wrapper{position:relative;height:100vh;}
+        .right{width:25%; position:absolute; top:0px; bottom:0px;}
+        .left {width:75%; position:absolute; top:0px; bottom:0px;}
+        .right{right:0px;}
+        .left{left:0px;}
+        .misc-buttons{position:absolute;bottom:0px; z-index: 5;}
+        #output {position:absolute;bottom:0;z-index:999;}
+        
+        .list {
+          font-family:sans-serif;
+        }
+        td {
+          padding:10px; 
+          border:solid 1px #eee;
+        }
+
+        input {
+          border:solid 1px #ccc;
+          border-radius: 5px;
+          padding:7px 14px;
+          margin-bottom:10px
+        }
+        input:focus {
+          outline:none;
+          border-color:#aaa;
+        }
+        .sort {
+          padding:8px 30px;
+          border-radius: 6px;
+          border:none;
+          color:#fff;
+          text-decoration: none;
+          background-color: #28a8e0;
+          height:30px;
+          cursor: pointer;
+        }
+        .sort:hover {
+          text-decoration: none;
+          background-color:#1b8aba;
+        }
+        .sort:focus {
+          outline:none;
+        }
+        .sort:after {
+          width: 0;
+          height: 0;
+          border-left: 5px solid transparent;
+          border-right: 5px solid transparent;
+          border-bottom: 5px solid transparent;
+          content:"";
+          top:-10px;
+          right:-5px;
+        }
+        .sort.asc:after {
+          width: 0;
+          height: 0;
+          border-left: 5px solid transparent;
+          border-right: 5px solid transparent;
+          border-top: 5px solid #fff;
+          content:"";
+          top:4px;
+          right:-5px;
+        }
+        .sort.desc:after {
+          width: 0;
+          height: 0;
+          border-left: 5px solid transparent;
+          border-right: 5px solid transparent;
+          border-bottom: 5px solid #fff;
+          content:"";
+          top:-4px;
+          right:-5px;
+        }
+
+        #history-switch {
+          left: 0px;
+          right: 0px;
+          top: 0px;
+          position: relative;
+          color: #fff;
+          padding:8px 30px;
+          border-radius: 6px;
+          border:none;
+          background-color: #28a8e0;
+          cursor: pointer;
+        }
+        .active, #history-switch:hover {
+          background-color:#1b8aba;
+        }
+        #history {
+          left: 0px;
+          right: 0px;
+          top: 0px;
+          bottom: 0px;
+          position: relative;
+        }
+        #current-listings-body {
+          background-color: #fff;
+          cursor: pointer;
+        }
+        tr:hover {
+          background-color: #888;
+        }
+        
+        .collapsible {
+           background-color: #eee;
+           color: #444;
+           cursor: pointer;
+           padding: 18px;
+           width: 100%;
+           border: none;
+           text-align: left;
+           outline: none;
+           font-size: 15px;
+         }
+
+         .active, .collapsible:hover {
+           background-color: #ccc;
+         }
+         
+         .content {
+           padding: 0 18px;
+           background-color: white;
+           max-height: 0;
+           overflow: hidden;
+           transition: max-height 0.2s ease-out;
+        }
+  </style>
+  
+  <script type="text/javascript">
+    // firebase stuff ==================================================================================
+        const db = firebase.firestore();
+        var uiConfig = {
+        signInSuccessUrl: 'https://sparkplugs-9e14b.firebaseapp.com/listings.html',
+        signInOptions: [
+          {
+            provider: firebase.auth.GoogleAuthProvider.PROVIDER_ID,
+            authMethod: 'https://accounts.google.com',
+            clientId: '796632565617-v1qf084h1t916tddml4ech8paef4bel0.apps.googleusercontent.com'
+          },
+          firebase.auth.EmailAuthProvider.PROVIDER_ID
+        ],
+        credentialHelper: firebaseui.auth.CredentialHelper.GOOGLE_YOLO,
+        tosUrl: 'https://sparkplugs-9e14b.firebaseapp.com/TOS.html',
+        privacyPolicyUrl: function() {
+          window.location.assign('https://sparkplugs-9e14b.firebaseapp.com/Privacy.html');
+        }
+      };
+    
+//////////////////////////////////////////////////////////////////////////////////////////////
+      // Initialize the FirebaseUI Widget using Firebase.
+      var ui = new firebaseui.auth.AuthUI(firebase.auth());
+      // The start method will wait until the DOM is loaded.
+
+      // Track auth state
+      initApp = function() {
+      firebase.auth().onAuthStateChanged(function(user) {
+        if (user) {
+          // User is signed in.
+          
+//////////// everything you want an authenticated user to be able to see or do, you put in this if statement /////////////////////////
+//////////// similar logic for the else statement down a ways ////////////////////////////////////////////////////////////////////////
+          
+          // a bunch of variables you can grab from auth
+          /*var displayName = user.displayName;
+          var email = user.email;
+          var emailVerified = user.emailVerified;
+          var photoURL = user.photoURL;
+          var uid = user.uid;
+          var phoneNumber = user.phoneNumber;
+          var providerData = user.providerData;*/
+          
+          
+          user.getIdToken().then(function(accessToken) {
+
+          // stuff you want to do immediately upon proof of authenticity
+            document.getElementById("everything").style.display = "";
+            window.dispatchEvent(new Event('resize'));
+            document.getElementById("page-title").textContent = user.displayName+"'s profile";
+            document.getElementById("auth-display-name").textContent = "Display name: " + user.displayName;
+            if (!user.emailVerified) document.getElementById("auth-email").textContent = "Email: " + user.email + " (unverified)";
+            else document.getElementById("auth-email").textContent = "Email: " + user.email + " (verified)";
+            document.getElementById("auth-user-id").textContent = "Userid: " + user.uid;
+            document.getElementById("auth-photo-url").textContent = "Photo URL: " + user.photoURL;
+            document.getElementById("auth-phone-number").textContent = "Phone number: " + user.phoneNumber;
+            return db.collection("users").doc(user.uid).get();
+          }).then(docRef => {
+            document.getElementById("payment-info-bool").textContent = "Payment info linked? " + (docRef.data().hasPaymentInfo ? "yes" : "no");
+            return db.collection("users").doc(user.uid).collection("listings").get();
+          }).then(collRef => {
+            collRef.forEach(function(doc) {
+              //build current listings table
+              //attach onclick function to each tr { clear bottom div except for listing data; }
+              
+              let newTr = document.createElement("tr");
+              newTr.id = doc.id;
+              
+              let price = document.createElement("td");
+              let location = document.createElement("td");
+              let timestamp = document.createElement("td");
+              
+              price.className = "price";
+              location.className = "location";
+              timestamp.className = "timestamp";
+              
+              price.textContent = doc.data().price;
+              location.textContent = doc.data().location;
+              timestamp.textContent = doc.data().timestamp || "0000-01-01";
+              
+              newTr.appendChild(price);
+              newTr.appendChild(location);
+              newTr.appendChild(timestamp);
+              newTr.onclick = function() {
+                document.getElementById("listing-info").style.display = "";
+                document.getElementById("close-user-listings").style.display = "none";
+                document.getElementById("list-search").style.display = "none";
+                document.getElementById("user-listings-table").style.display = "none";
+                document.getElementById("spot-price").value = doc.data().price;
+                document.getElementById("spot-location").textContent = "location: "+doc.data().location;
+                document.getElementById("spot-description").value = doc.data().description;
+                document.getElementById("spot-timestamp").textContent = "timestamp: "+doc.data().timestamp;
+                document.getElementById("spot-id").textContent = "spotid: "+doc.id;
+              }
+              document.getElementById("current-listings-body").appendChild(newTr);
+            });
+            return db.collection("users").doc(user.uid).collection("history").get();
+          }).then(collRef => {
+            collRef.forEach(function(doc) {
+              //check buy/sell bool and build buy/sell lists
+              //each li made collapsible
+              let newLi = document.createElement("li");
+              newLi.id = doc.id;
+              newLi.className = "collapsible";
+              newLi.textContent = "$"+doc.data().price + " " + doc.data().location;
+              
+              let newDiv = document.createElement("div");
+              newDiv.className = "content";
+              
+              let newP = document.createElement("p");
+              newP.textContent = "Description: " + doc.data().description;
+              newDiv.appendChild(newP);
+              
+              let newerP = document.createElement("p");
+              newerP.textContent = "Fulfilled by: " + doc.data().fulfiller;
+              newDiv.appendChild(newerP);
+              
+              newLi.appendChild(newDiv);
+              
+              newLi.addEventListener("click",function() {
+                this.classList.toggle("active");
+                let content = this.firstChild;
+                content = content.nextElementSibling;
+                if (content.style.maxHeight) {
+                  content.style.maxHeight = null;
+                } else {
+                  content.style.maxHeight = content.scrollHeight + "px";
+                }
+              });
+                
+              if (doc.data().sold === false) {
+                document.getElementById("buy").appendChild(newLi);
+              }
+              else if (doc.data().sold === true) {
+                document.getElementById("sell").appendChild(newLi);
+              }
+              else (console.error("Document missing buy/sell bool"));
+            });
+          }).catch(error => {
+            console.error(error)
+          });
+  
+
+
+          var options = {
+            valueNames: [ 'price', 'location', 'timestamp' ]
+          };
+
+          var userListings = new List('user-listings-div', options);
+
+          /*document.getElementById("sort-price").addEventListener('click, function() {
+            if () list.sort('price', {order: "asc"});
+            else list.sort('price', {order: "desc"});
+          });*/
+/////////////////// functions ///////////////////////////////////    
+
+
+/////////////////// event listeners for buttons ////////////////////////////////
+          var originalDescription;
+          var originalPrice;
+          
+          document.getElementById('sign-out-button').addEventListener('click', function() {
+              if (firebase.auth().currentUser) {
+                firebase.auth().signOut();
+              }
+          });
+          
+          document.getElementById('go-back-spot').addEventListener('click', function() {
+            document.getElementById('listing-info').style.display = "none";
+            document.getElementById('user-listings-table').style.display = "";
+            document.getElementById("close-user-listings").style.display = "";
+            document.getElementById("list-search").style.display = "";
+          });
+          
+          document.getElementById('delete-spot').addEventListener('click', function() {
+            document.getElementById('output').textContent = "Delete spot button not active.";
+            //DeleteSpot(spotid);
+          });
+          
+          document.getElementById('edit-spot').addEventListener('click', function() {
+            originalDescription = document.getElementById('spot-description').value;
+            originalPrice = document.getElementById('spot-price').value;
+            
+            document.getElementById('spot-price').removeAttribute('readonly');
+            document.getElementById('spot-price').removeAttribute('disabled');
+            document.getElementById('spot-description').removeAttribute('readonly');
+            document.getElementById('spot-description').removeAttribute('disabled');
+            
+            document.getElementById('update-spot').style.display = "";
+            document.getElementById('cancel-spot').style.display = "";
+            document.getElementById('edit-spot').style.display = "none";
+            document.getElementById('delete-spot').style.display = "none";
+            document.getElementById('go-back-spot').style.display = "none";
+          });
+            
+          document.getElementById('update-spot').addEventListener('click', function() {
+            if (document.getElementById('spot-description').value && Number(document.getElementById('spot-price').value)) {
+              document.getElementById('spot-price').value = Number(Math.round(document.getElementById('spot-price').value+'e2')+'e-2');
+              document.getElementById('output').textContent = "Update spot button not active.";
+              //UpdateSpot(spotid,price,description);
+              document.getElementById('update-spot').style.display = "none";
+              document.getElementById('cancel-spot').style.display = "none";
+            
+              document.getElementById('spot-price').setAttribute('readonly','readonly');
+              document.getElementById('spot-price').setAttribute('disabled','disabled');
+              document.getElementById('spot-description').setAttribute('readonly','readonly');
+              document.getElementById('spot-description').setAttribute('disabled','disabled');
+            
+              document.getElementById('edit-spot').style.display = "";
+              document.getElementById('delete-spot').style.display = "";
+              document.getElementById('go-back-spot').style.display = "";
+            }
+          });
+          
+          document.getElementById('cancel-spot').addEventListener('click', function() {
+            document.getElementById('spot-description').value = originalDescription;
+            document.getElementById('spot-price').value = originalPrice;
+
+            document.getElementById('spot-price').setAttribute('readonly','readonly');
+            document.getElementById('spot-price').setAttribute('disabled','disabled');
+            document.getElementById('spot-description').setAttribute('readonly','readonly');
+            document.getElementById('spot-description').setAttribute('disabled','disabled');
+            
+            document.getElementById('update-spot').style.display = "none";
+            document.getElementById('cancel-spot').style.display = "none";
+            document.getElementById('edit-spot').style.display = "";
+            document.getElementById('delete-spot').style.display = "";
+            document.getElementById('go-back-spot').style.display = "";
+          });
+          
+          document.getElementById('add-spot-button').addEventListener('click', function() {
+            window.location = "https://sparkplugs-9e14b.firebaseapp.com/post.html";
+          });
+
+          document.getElementById('view-listings-button').addEventListener('click', function() {
+            window.location = "https://sparkplugs-9e14b.firebaseapp.com/listings.html";
+          });
+          
+          document.getElementById('history-switch').addEventListener('click', function() {
+            if (document.getElementById('history-switch').textContent === "History - reserved spots") {
+              document.getElementById('sell').style.display = "";
+              document.getElementById('buy').style.display = "none";
+              document.getElementById('history-switch').textContent = "History - sold spots";
+            }
+            else if (document.getElementById('history-switch').textContent === "History - sold spots") {
+              document.getElementById('sell').style.display = "none";
+              document.getElementById('buy').style.display = "";
+              document.getElementById('history-switch').textContent = "History - reserved spots";
+            }
+            else console.log("Stop messing with the page >:(");
+          });
+          
+          document.getElementById('view-user-listings').addEventListener('click', function() {
+            document.getElementById('wrapper').style.height = "50vh";
+            document.getElementById('user-listings-div').style.display = "";
+            document.getElementById('view-user-listings').style.display = "none";
+          });
+          
+          document.getElementById('close-user-listings').addEventListener('click', function() {
+            document.getElementById('view-user-listings').style.display = "";
+            document.getElementById('user-listings-div').style.display = "none";
+            document.getElementById('wrapper').style.height = "100vh";
+          });
+////////////// cloud function call examples //////////////////////////////////////////////////////////////////////////////////////////////
+            // can easily add support for more properties
+
+
+          // AddSpot only works if current authenticated user has "isVerified" and "hasPaymentInfo" booleans set to true in firestore users/<userid>
+          // Can only do this manually until we add simulated payment options and whatever other "verification".
+          //
+          // Call AddSpot by passing a geojson object from the geocoder, i.e.
+          // geocoder.on('result', function(ev) { 
+          //   let price = document.getElementById("price").textContent;
+          //   let description = document.getElementById("description").textContent;
+          //   let geojson = ev.result;
+          //   let _add = AddSpot(geojson, price, description);
+          //
+          //   document.getElementById("add-spot-button").removeEventListener('click', _add);
+          //   document.getElementById("add-spot-button").addEventListener('click', _add, false);
+          // }
+          /*
+          var addSpot = firebase.functions().httpsCallable('addSpot');
+          function AddSpot(geojson, price, description) {
+              if (!geojson) { document.getElementById('location').textContent = "** Please select a valid location"; }
+              else if (!geojson.address && !geojson.properties.address) { document.getElementById('location').textContent = "** Please select a valid location"; }
+              else {
+                addSpot({
+                  geojson: geojson,
+                  price: Number(price),
+                  description: description
+                })
+                .then(function(result) {
+                   map.getSource('spots').setData(dataseturl);
+                   map.setCenter([longitude, latitude], eventData);
+                  // use some returned value maybe
+                });
+              }
+          }
+          */
+          
+          // UpdateSpot only works if current authenticated userid === the userid in the spots/<spotid> document.
+          // Can only change description and price.
+          //
+          /*
+          var updateSpot = firebase.functions().httpsCallable('updateSpot');
+          function UpdateSpot(spotid, price, description) {
+              // calls spot update function with either default fields or new fields
+                updateSpot({
+                  spotid: spotid,
+                  price: Number(price),
+                  description: description
+                })
+                .then(function(result) {
+                  // refresh map with updated spot and center on updated point
+                  map.getSource('spots').setData(dataseturl);
+                  map.setCenter([newlongitude, newlatitude], eventData);
+                  // do something with result?
+                });
+              }
+          }
+          */
+          
+          // DeleteSpot only works if current authenticated userid === the userid in the spots/<spotid> document.
+          //
+          //
+          /*
+          var deleteSpot = firebase.functions().httpsCallable('deleteSpot');
+          function DeleteSpot(spotid) {
+            db.collection("spots").doc(spotid).get().then(docRef => {
+                return deleteSpot({
+                  spotid: spotid
+                })
+            }).then(function(result) {
+                  // something?
+            });
+          }
+          */
+          
+        } else {
+        
+//////////// user is signed out //////////////////////////////////////////////////////////////////
+          window.location = "https://sparkplugs-9e14b.firebaseapp.com/";
+
+        }
+      }, function(error) {
+        console.log(error);
+      });
+  }
+
+      // make everything work
+      window.addEventListener('load', function() {
+        initApp()
+      });
+      
+  </script>
+  
+</head>
+  <body>
+    <div id ="everything" style="display:none;">
+      <div id="firebaseui-auth-container"></div><!--must stay for signout functionality-->
+      <div class="wrapper" id="wrapper">
+          <div class="left" style="overflow:auto">
+              <h1 id = "page-title" style="vertical-align:middle;"></h1>
+              <div id="user-info">
+                  <div id="auth-display-name"></div>
+                  <div id="auth-email"></div>
+                  <div id="auth-email-verified"></div>
+                  <div id="auth-photo-url"></div>
+                  <div id="auth-user-id"></div>
+                  <div id="auth-phone-number"></div>
+                  <div id="payment-info-bool"></div>
+                  <div id="preferred-payment-method"></div>
+              </div>
+              <div class="misc-buttons">
+                  <button class = "btn btn-primary" id = "sign-out-button"><i class="fa fa-sign-out"></i>Logout</button>
+                  <button class = "btn btn-primary" id = "add-spot-button">Add a spot</button>
+                  <button class = "btn btn-primary" id = "change-info">Edit my information</button>
+                  <button class = "btn btn-primary" id = "view-user-listings">View my current listings</button>
+                  <!--button class = "btn btn-primary" id = "user-page-button">Vew my user page</button-->
+                  <button class = "btn btn-primary" id = "view-listings-button">View all listings</button>
+              </div>
+              <div id="edit-info-buttons" style="display:none">
+                  <button class = "btn btn-primary" id = "save-changes">Save changes</button>
+                  <button class = "btn btn-primary" id = "edit-payment-info">Edit payment methods</button>
+                  <button class = "btn btn-primary" id = "cancel">Cancel</button>
+              </div>
+              <div id="add-method-div" style="display:none">
+                  <button class = "btn btn-primary" id = "simulate-toggle">Toggle payment method</button>
+              </div>
+              <div id="edit-payment-info-div" style="display:none">
+                  <ul id="payment-list"></ul>
+                  <!--button class = "btn btn-primary">Add new payment method</button--><!-- gets appended to end of payment-list -->
+                  <!--button class = "btn btn-primary">Remove this payment method</button--><!-- gets appended to each payment method collapsible in payment-list -->
+              </div>
+          </div>
+          <div class="right" style="overflow:auto">
+              <!--h1 style="text-align:center">History</h1-->
+              <div id="history-switch" style="text-align:center">History - reserved spots</div>
+              <div id="history">
+                <ul id="buy"></ul>
+                <ul id="sell" style="display:none;"></ul>
+              </div>
+          </div>
+      </div>
+      <div id="user-listings-div" style="display:none;position:relative;height:50vh;top:25px;overflow:auto;">
+        <button id = "close-user-listings" class="btn btn-primary">Close listings</button>
+        <!--h1 style="vertical-align:middle"></h1-->
+        <input id = "list-search" class="search" placeholder="Search"/>
+        <!--button class="sort" data-sort="location">Sort by location</button>
+        <button class="sort" data-sort="price">Sort by price</button>
+        <button class="sort" data-sort="timestamp">Sort by date added</button-->
+        <table id="user-listings-table" style="width:100%">
+            <thead>
+                <tr>
+                    <th id="sort-price" class="sort" data-sort="price">Price</th>
+                    <th id="sort-location" class="sort" data-sort="location">Location</th>
+                    <th id="sort-timestamp" class="sort" data-sort="timestamp">Date added</th>
+                </tr>
+            </thead>
+            <tbody id="current-listings-body" class="list">
+                <!--tr id="spotid1">
+                    <td class = "price" style="width:15%">321</td>
+                    <td class = "location" style="width:70%">zomewhere</td>
+                    <td class = "timestamp" style="width:15%">2019-11-23</td>
+                </tr>
+                <tr id="spotid2">
+                    <td class = "price">123</td>
+                    <td class = "location">somewhere</td>
+                    <td class = "timestamp">2018-11-23</td>
+                </tr-->
+            </tbody>
+        </table>
+        <div id="listing-info" style="display:none">
+            <div style="display:inline-block;width:auto;white-space:nowrap;">price: $</div>
+            <input type="number" step="0.01" min="0.01" id="spot-price" required readonly disabled></input>
+            <br>
+            <div style="display:inline-block;width:auto;white-space:nowrap;">description: </div>
+            <input type="text" id="spot-description" required readonly disabled></input>
+            <div id="spot-location"></div>
+            <div id="spot-timestamp"></div>
+            <div id="spot-id"></div>
+            <button class = "btn btn-primary" id = "edit-spot">Edit spot</button>
+            <button class = "btn btn-primary" id = "go-back-spot">Go back</button>
+            <button class = "btn btn-primary" id = "delete-spot">Delete spot</button>
+            <button class = "btn btn-primary" id = "update-spot" style = "display:none">Save changes</button>
+            <button class = "btn btn-primary" id = "cancel-spot" style = "display:none">Cancel</button>
+        </div>
+      </div>
+      <div id="output"></div>
+    </div>
+  </body>
+</html>
