@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset=utf-8 />
-  <title>SparkPlugs - Listings</title>
+  <title>SparkPlugs - Adding A Parking Spot In An Area</title>
   <link rel="stylesheet" href="styles.css">
   
   <!-- Material Design Theming -->
@@ -440,7 +440,7 @@
                   <button class = "btn btn-primary" id = "user-page-button" align = "center">Vew my user page</button>
                   <!--button class = "btn btn-primary" id = "view-listings-button"><i class="fa fa-sign-out"></i>View Listings</button-->
               </div>
-      <h1>Listings</h1>
+      <h1>Choose an Area</h1>
 
       <div class="wrapper" id="wrapper">
           <div class="center">
@@ -458,7 +458,12 @@
                   <div id="spot-count" ></div>
                   <div id="spot-cheap" ></div>
                   <button class = "btn btn-primary" id = "view-spots-button" style="display:none">View spots near this location</button>
-              </div>
+              	  <input type = "textarea" name = "despriction" value = "Enter Parking Spot Description... such as hours available, indoor/outdoor...">
+		  <p> Price:</p>
+		  <input type = "radio" name = "price" value = "5" >
+		  <input type = "radio" name = "price" value = "10" >
+		  <input type = "radio" name = "price" value = "15" >
+		</div>
           </div>
 
 	<div id = "output" style = "display:none"></div>
@@ -471,3 +476,4 @@
    </div>
   </body>
 </html>
+
