@@ -44,8 +44,8 @@
             provider: firebase.auth.GoogleAuthProvider.PROVIDER_ID,
             authMethod: 'https://accounts.google.com',
             clientId: '796632565617-v1qf084h1t916tddml4ech8paef4bel0.apps.googleusercontent.com'
-          },
-          firebase.auth.EmailAuthProvider.PROVIDER_ID
+          }
+          //firebase.auth.EmailAuthProvider.PROVIDER_ID
           //firebase.auth.FacebookAuthProvider.PROVIDER_ID,
           //firebase.auth.TwitterAuthProvider.PROVIDER_ID,
           //firebase.auth.GithubAuthProvider.PROVIDER_ID,
@@ -78,7 +78,12 @@
             user.getIdToken().then(function(accessToken) {
             
           // stuff you want to do immediately upon proof of authenticity
-          
+              firebase.auth().currentUser.updateProfile({
+                displayName: firebase.auth().currentUser.providerData[0].displayName,
+                photoURL: firebase.auth().currentUser.providerData[0].photoURL
+              }).catch(error => {
+                console.log(error);
+              });
               window.location = 'listings.html';
             });
 

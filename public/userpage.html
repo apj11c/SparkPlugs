@@ -31,7 +31,7 @@
   
   <style>
         #everything{position:absolute;top:0px;bottom:0px;left:0px;right:0px;}
-        .wrapper{position:relative;height:100vh;}
+        .wrapper{position:relative;height:50vh;}
         .right{width:25%; position:absolute; top:0px; bottom:0px;}
         .left {width:75%; position:absolute; top:0px; bottom:0px;}
         .right{right:0px;}
@@ -170,8 +170,7 @@
             provider: firebase.auth.GoogleAuthProvider.PROVIDER_ID,
             authMethod: 'https://accounts.google.com',
             clientId: '796632565617-v1qf084h1t916tddml4ech8paef4bel0.apps.googleusercontent.com'
-          },
-          firebase.auth.EmailAuthProvider.PROVIDER_ID
+          }
         ],
         credentialHelper: firebaseui.auth.CredentialHelper.GOOGLE_YOLO,
         tosUrl: 'https://sparkplugs-9e14b.firebaseapp.com/TOS.html',
@@ -193,7 +192,6 @@
           
 //////////// everything you want an authenticated user to be able to see or do, you put in this if statement /////////////////////////
 //////////// similar logic for the else statement down a ways ////////////////////////////////////////////////////////////////////////
-          
           // a bunch of variables you can grab from auth
           /*var displayName = user.displayName;
           var email = user.email;
@@ -207,14 +205,22 @@
           user.getIdToken().then(function(accessToken) {
 
           // stuff you want to do immediately upon proof of authenticity
+//////////// i dynamically create all the data on the page here //////////////////////////////////////////////////////////////////////
+            firebase.auth().currentUser.updateProfile({
+              displayName: firebase.auth().currentUser.providerData[0].displayName,
+              photoURL: firebase.auth().currentUser.providerData[0].photoURL
+            }).catch(error => {
+              console.log(error);
+            });
+            
             document.getElementById("everything").style.display = "";
             window.dispatchEvent(new Event('resize'));
-            document.getElementById("page-title").textContent = user.displayName+"'s profile";
-            document.getElementById("auth-display-name").textContent = "Display name: " + user.displayName;
+            document.getElementById("page-title").textContent = firebase.auth().currentUser.providerData[0].displayName+"'s profile";
+            document.getElementById("auth-display-name").textContent = "Display name: " + firebase.auth().currentUser.providerData[0].displayName;
             if (!user.emailVerified) document.getElementById("auth-email").textContent = "Email: " + user.email + " (unverified)";
             else document.getElementById("auth-email").textContent = "Email: " + user.email + " (verified)";
             document.getElementById("auth-user-id").textContent = "Userid: " + user.uid;
-            document.getElementById("auth-photo-url").textContent = "Photo URL: " + user.photoURL;
+            document.getElementById("auth-photo-url").textContent = "Photo URL: " + firebase.auth().currentUser.providerData[0].photoURL;
             document.getElementById("auth-phone-number").textContent = "Phone number: " + user.phoneNumber;
             return db.collection("users").doc(user.uid).get();
           }).then(docRef => {
@@ -236,16 +242,16 @@
               location.className = "location";
               timestamp.className = "timestamp";
               
-              price.textContent = doc.data().price;
-              location.textContent = doc.data().location;
+              price.textContent = doc.data().price || "null";
+              location.textContent = doc.data().location || "null";
               timestamp.textContent = doc.data().timestamp || "0000-01-01";
               
               newTr.appendChild(price);
               newTr.appendChild(location);
               newTr.appendChild(timestamp);
-              newTr.onclick = function() {
+              newTr.addEventListener("click", function() {
                 document.getElementById("listing-info").style.display = "";
-                document.getElementById("close-user-listings").style.display = "none";
+                //document.getElementById("close-user-listings").style.display = "none";
                 document.getElementById("list-search").style.display = "none";
                 document.getElementById("user-listings-table").style.display = "none";
                 document.getElementById("spot-price").value = doc.data().price;
@@ -253,13 +259,14 @@
                 document.getElementById("spot-description").value = doc.data().description;
                 document.getElementById("spot-timestamp").textContent = "timestamp: "+doc.data().timestamp;
                 document.getElementById("spot-id").textContent = "spotid: "+doc.id;
-              }
+                document.getElementById("spot-description").dispatchEvent(document.createEvent("UIEvents").initUIEvent("input",true,true));
+              });
               document.getElementById("current-listings-body").appendChild(newTr);
             });
             return db.collection("users").doc(user.uid).collection("history").get();
           }).then(collRef => {
             collRef.forEach(function(doc) {
-              //check buy/sell bool and build buy/sell lists
+              //check buy/sell bool and build buy/sell history lists
               //each li made collapsible
               let newLi = document.createElement("li");
               newLi.id = doc.id;
@@ -275,6 +282,8 @@
               
               let newerP = document.createElement("p");
               newerP.textContent = "Fulfilled by: " + doc.data().fulfiller;
+              newerP.appendChild(document.createElement('br'));
+              newerP.appendChild(document.createTextNode("Posted by: " + doc.data().poster));
               newDiv.appendChild(newerP);
               
               newLi.appendChild(newDiv);
@@ -290,10 +299,10 @@
                 }
               });
                 
-              if (doc.data().sold === false) {
+              if (doc.data().fulfillerid === user.uid) {
                 document.getElementById("buy").appendChild(newLi);
               }
-              else if (doc.data().sold === true) {
+              else if (doc.data().posterid === user.uid) {
                 document.getElementById("sell").appendChild(newLi);
               }
               else (console.error("Document missing buy/sell bool"));
@@ -316,11 +325,26 @@
           });*/
 /////////////////// functions ///////////////////////////////////    
 
+    document.getElementById("spot-description").addEventListener('input', function() {
+        textarea = this;
+        textareaRows = textarea.value.split("\n");
+        if(textareaRows[0] != "undefined" && textareaRows.length < 15) counter = textareaRows.length;
+        else if(textareaRows.length >= 15) counter = 15;
+        else counter = 1;
+        textarea.rows = counter; }, false);
 
 /////////////////// event listeners for buttons ////////////////////////////////
           var originalDescription;
           var originalPrice;
           
+          document.getElementById('toggle-payment-info').addEventListener('click',function() {
+            firebase.functions().httpsCallable('togglePaymentInfo') ({ }).then(function(result) {
+              document.getElementById("payment-info-bool").textContent = "Payment info linked? " + (docRef.data().hasPaymentInfo ? "yes" : "no");
+              console.log(result);
+              console.log(JSON.stringify(result));
+            });
+          }, false);
+
           document.getElementById('sign-out-button').addEventListener('click', function() {
               if (firebase.auth().currentUser) {
                 firebase.auth().signOut();
@@ -330,13 +354,18 @@
           document.getElementById('go-back-spot').addEventListener('click', function() {
             document.getElementById('listing-info').style.display = "none";
             document.getElementById('user-listings-table').style.display = "";
-            document.getElementById("close-user-listings").style.display = "";
+            //document.getElementById("close-user-listings").style.display = "";
             document.getElementById("list-search").style.display = "";
           });
           
           document.getElementById('delete-spot').addEventListener('click', function() {
-            document.getElementById('output').textContent = "Delete spot button not active.";
-            //DeleteSpot(spotid);
+            //document.getElementById('output').textContent = "Delete spot button not active.";
+            DeleteSpot(document.getElementById('spot-id').textContent.substring(8));
+            document.getElementById('listing-info').style.display = "none";
+            document.getElementById('user-listings-table').style.display = "";
+            //document.getElementById("close-user-listings").style.display = "";
+            document.getElementById("list-search").style.display = "";
+            document.getElementById(document.getElementById('spot-id').textContent.substring(8)).parentNode.removeChild(document.getElementById(document.getElementById('spot-id').textContent.substring(8)));
           });
           
           document.getElementById('edit-spot').addEventListener('click', function() {
@@ -353,13 +382,15 @@
             document.getElementById('edit-spot').style.display = "none";
             document.getElementById('delete-spot').style.display = "none";
             document.getElementById('go-back-spot').style.display = "none";
+            
+            document.getElementById('error').textContent = "";
           });
             
           document.getElementById('update-spot').addEventListener('click', function() {
-            if (document.getElementById('spot-description').value && Number(document.getElementById('spot-price').value)) {
+            if (document.getElementById('spot-description').value && Number(document.getElementById('spot-price').value) > 0 && Number(document.getElementById('spot-price').value) <= 1000.00) {
               document.getElementById('spot-price').value = Number(Math.round(document.getElementById('spot-price').value+'e2')+'e-2');
-              document.getElementById('output').textContent = "Update spot button not active.";
-              //UpdateSpot(spotid,price,description);
+              //document.getElementById('output').textContent = "Update spot button not active.";
+              UpdateSpot(document.getElementById('spot-id').textContent.substring(8),Number(document.getElementById('spot-price').value),document.getElementById('spot-description').value);
               document.getElementById('update-spot').style.display = "none";
               document.getElementById('cancel-spot').style.display = "none";
             
@@ -371,6 +402,13 @@
               document.getElementById('edit-spot').style.display = "";
               document.getElementById('delete-spot').style.display = "";
               document.getElementById('go-back-spot').style.display = "";
+              
+              document.getElementById('error').textContent = "";
+            }
+            else {
+              document.getElementById('spot-description').value = originalDescription;
+              document.getElementById('spot-price').value = originalPrice;
+              document.getElementById('error').textContent = "ERROR! Please enter valid price and description or cancel.";
             }
           });
           
@@ -412,17 +450,20 @@
             else console.log("Stop messing with the page >:(");
           });
           
+          /*
           document.getElementById('view-user-listings').addEventListener('click', function() {
             document.getElementById('wrapper').style.height = "50vh";
             document.getElementById('user-listings-div').style.display = "";
             document.getElementById('view-user-listings').style.display = "none";
           });
-          
+          */
+          /*
           document.getElementById('close-user-listings').addEventListener('click', function() {
             document.getElementById('view-user-listings').style.display = "";
             document.getElementById('user-listings-div').style.display = "none";
             document.getElementById('wrapper').style.height = "100vh";
           });
+          */
 ////////////// cloud function call examples //////////////////////////////////////////////////////////////////////////////////////////////
             // can easily add support for more properties
 
@@ -463,7 +504,7 @@
           // UpdateSpot only works if current authenticated userid === the userid in the spots/<spotid> document.
           // Can only change description and price.
           //
-          /*
+
           var updateSpot = firebase.functions().httpsCallable('updateSpot');
           function UpdateSpot(spotid, price, description) {
               // calls spot update function with either default fields or new fields
@@ -473,30 +514,25 @@
                   description: description
                 })
                 .then(function(result) {
-                  // refresh map with updated spot and center on updated point
-                  map.getSource('spots').setData(dataseturl);
-                  map.setCenter([newlongitude, newlatitude], eventData);
                   // do something with result?
                 });
-              }
           }
-          */
+          
+
           
           // DeleteSpot only works if current authenticated userid === the userid in the spots/<spotid> document.
           //
           //
-          /*
+
           var deleteSpot = firebase.functions().httpsCallable('deleteSpot');
           function DeleteSpot(spotid) {
-            db.collection("spots").doc(spotid).get().then(docRef => {
-                return deleteSpot({
-                  spotid: spotid
-                })
+            return deleteSpot({
+              spotid: spotid
             }).then(function(result) {
                   // something?
             });
           }
-          */
+
           
         } else {
         
@@ -531,28 +567,19 @@
                   <div id="auth-user-id"></div>
                   <div id="auth-phone-number"></div>
                   <div id="payment-info-bool"></div>
-                  <div id="preferred-payment-method"></div>
+                  <button id="toggle-payment-info">Toggle payment info bool</button>
+                  <div id="edit-error"></div>
               </div>
               <div class="misc-buttons">
                   <button class = "btn btn-primary" id = "sign-out-button"><i class="fa fa-sign-out"></i>Logout</button>
                   <button class = "btn btn-primary" id = "add-spot-button">Add a spot</button>
-                  <button class = "btn btn-primary" id = "change-info">Edit my information</button>
-                  <button class = "btn btn-primary" id = "view-user-listings">View my current listings</button>
+                  <!--button class = "btn btn-primary" id = "view-user-listings">View my current listings</button-->
                   <!--button class = "btn btn-primary" id = "user-page-button">Vew my user page</button-->
                   <button class = "btn btn-primary" id = "view-listings-button">View all listings</button>
               </div>
               <div id="edit-info-buttons" style="display:none">
                   <button class = "btn btn-primary" id = "save-changes">Save changes</button>
-                  <button class = "btn btn-primary" id = "edit-payment-info">Edit payment methods</button>
                   <button class = "btn btn-primary" id = "cancel">Cancel</button>
-              </div>
-              <div id="add-method-div" style="display:none">
-                  <button class = "btn btn-primary" id = "simulate-toggle">Toggle payment method</button>
-              </div>
-              <div id="edit-payment-info-div" style="display:none">
-                  <ul id="payment-list"></ul>
-                  <!--button class = "btn btn-primary">Add new payment method</button--><!-- gets appended to end of payment-list -->
-                  <!--button class = "btn btn-primary">Remove this payment method</button--><!-- gets appended to each payment method collapsible in payment-list -->
               </div>
           </div>
           <div class="right" style="overflow:auto">
@@ -564,13 +591,9 @@
               </div>
           </div>
       </div>
-      <div id="user-listings-div" style="display:none;position:relative;height:50vh;top:25px;overflow:auto;">
-        <button id = "close-user-listings" class="btn btn-primary">Close listings</button>
-        <!--h1 style="vertical-align:middle"></h1-->
+      <div id="user-listings-div" style="position:relative;height:50vh;top:25px;overflow:auto;">
+        <!--button id = "close-user-listings" class="btn btn-primary">Close listings</button-->
         <input id = "list-search" class="search" placeholder="Search"/>
-        <!--button class="sort" data-sort="location">Sort by location</button>
-        <button class="sort" data-sort="price">Sort by price</button>
-        <button class="sort" data-sort="timestamp">Sort by date added</button-->
         <table id="user-listings-table" style="width:100%">
             <thead>
                 <tr>
@@ -594,13 +617,14 @@
         </table>
         <div id="listing-info" style="display:none">
             <div style="display:inline-block;width:auto;white-space:nowrap;">price: $</div>
-            <input type="number" step="0.01" min="0.01" id="spot-price" required readonly disabled></input>
+            <input type="number" step="0.01" min="0.01" max="1000.00" id="spot-price" placeholder = "0.00 < price <= 1000.00" required readonly disabled></input>
             <br>
-            <div style="display:inline-block;width:auto;white-space:nowrap;">description: </div>
-            <input type="text" id="spot-description" required readonly disabled></input>
+            <div>description: </div><br/>
+            <textarea id="spot-description" style="width:50%;resize:none;height:auto;" placeholder = "Enter Parking Spot Description... such as hours available, indoor/outdoor, spot number/location..." required readonly disabled></textarea>
             <div id="spot-location"></div>
             <div id="spot-timestamp"></div>
             <div id="spot-id"></div>
+            <div id="error"></div>
             <button class = "btn btn-primary" id = "edit-spot">Edit spot</button>
             <button class = "btn btn-primary" id = "go-back-spot">Go back</button>
             <button class = "btn btn-primary" id = "delete-spot">Delete spot</button>
@@ -608,7 +632,7 @@
             <button class = "btn btn-primary" id = "cancel-spot" style = "display:none">Cancel</button>
         </div>
       </div>
-      <div id="output"></div>
+      <div id="output" style="display:none"></div>
     </div>
   </body>
 </html>

@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset=utf-8 />
-  <title>SparkPlugs - Listings</title>
+  <title>SparkPlugs - Adding A Parking Spot In An Area</title>
   <link rel="stylesheet" href="styles.css">
   
   <!-- Material Design Theming -->
@@ -73,16 +73,15 @@
           
           user.getIdToken().then(function(accessToken) {
 
+          // stuff you want to do immediately upon proof of authenticity
             firebase.auth().currentUser.updateProfile({
               displayName: firebase.auth().currentUser.providerData[0].displayName,
               photoURL: firebase.auth().currentUser.providerData[0].photoURL
             }).catch(error => {
               console.log(error);
             });
-          // stuff you want to do immediately upon proof of authenticity
             document.getElementById("everything").style.display = "";
             window.dispatchEvent(new Event('resize'));
-            
           
           });
   
@@ -91,23 +90,6 @@
           mapboxgl.accessToken = 'pk.eyJ1Ijoid29zdGVlbjQxNyIsImEiOiJjam9hbnU2YXIwM3V6M3BydGVsZzM0NDh0In0.pUYgvlGhW5rYsfx8wCnP6g';
           const dataseturl = 'https://api.mapbox.com/datasets/v1/wosteen417/cjoao2i3108mc32o7yu31rc0d/features?access_token=pk.eyJ1Ijoid29zdGVlbjQxNyIsImEiOiJjam9hbnU2YXIwM3V6M3BydGVsZzM0NDh0In0.pUYgvlGhW5rYsfx8wCnP6g.geojson';
 
-/////////////////// functions ///////////////////////////////////    
-          function ViewSpots() {
-            document.getElementById('listings-div').style.display = "";
-            document.getElementById('spot-info').style.display = "none";
-            document.getElementById('wrapper').style.display = "none";
-          }
-          
-          function ReserveSpot(doc) {
-            //document.getElementById('output').textContent = "** ReserveSpot not yet implemented.\ndoc.data(): "+JSON.stringify(doc.data());
-            db.doc("users/"+user.uid).get().then(userRef => {
-              if (userRef.data().hasPaymentInfo) {
-                document.getElementById(doc.id).parentNode.removeChild(document.getElementById(doc.id));
-                return firebase.functions().httpsCallable('reserveSpot') ({ spotid: doc.id, data: doc.data() });
-              }
-              else { console.log("Error: user has no payment information"); return Promise.resolve(false); }
-            }).then(function(result) { /*something*/ }).catch(error => { console.log(error); });
-          }
 
 /////////////////// event listeners for buttons ////////////////////////////////
 
@@ -116,50 +98,31 @@
                 firebase.auth().signOut();
               }
           });
-
+          /*
           document.getElementById('add-spot-button').addEventListener('click', function() {
             window.location = "https://sparkplugs-9e14b.firebaseapp.com/post.html";
           });
-      
+          */    
           document.getElementById('user-page-button').addEventListener('click', function() {
             window.location = "https://sparkplugs-9e14b.firebaseapp.com/userpage.html";
           });
           
           document.getElementById('back-button').addEventListener('click', function() {
               document.getElementById('wrapper').style.display = "";
-              document.getElementById('spot-info').style.display = "";
               document.getElementById('listings-div').style.display = "none";
           });
-          /*
+          
           document.getElementById('view-listings-button').addEventListener('click', function() {
             window.location = "https://sparkplugs-9e14b.firebaseapp.com/listings.html";
           });
-          */
+          
           
 ////////////// load map object into 'map' div ///////////////////////////////
       var map = new mapboxgl.Map({
         container: 'map',
         style: 'mapbox://styles/mapbox/streets-v10', // temporary default style
-        zoom: 2,
-        minZoom: 2
+        zoom: 0
       });
-      // load spots into map
-      map.on('load', function() {
-        map.addSource('spots', {
-          type: 'geojson',
-          data: dataseturl
-        });
-        map.addLayer({
-          "id": "spots",
-          "type": "symbol",
-          "source": "spots",
-          "layout": {
-             "icon-image": "oslo-metro" // temporary for spot visibility
-          }
-        });
-      });
-      
-          // hide spot info and show previously hidden elements
 
 ///////////// attach mapbox geocoder (search bar) /////////////////////////////////////
       var geocoder = new MapboxGeocoder({
@@ -177,184 +140,66 @@
           clickcoords[0] += e.lngLat.lng > clickcoords[0] ? 360 : -360;
         }
       });
-*/
-
-//////////// fill element data upon spot click //////////////////////////////////////
-      map.on('click', 'spots', function(e) {
-         //stores raw location in html because js is weird
-        document.getElementById('spot-location').textContent = e.features[0].properties.location;
-        document.getElementById('spot-count').textContent = "Number of spots near this location: ...";
-        document.getElementById('spot-cheap').textContent = "Cheapest spot near this location: ...";
-        let latitude = parseFloat(e.features[0].geometry.coordinates[1]);
-        let longitude = parseFloat(e.features[0].geometry.coordinates[0]);
-        let greaterGeoloc = new firebase.firestore.GeoPoint(latitude+0.006,longitude+0.016);
-        let lesserGeoloc = new firebase.firestore.GeoPoint(latitude-0.006,longitude-0.016);
-        
-        let _count = 0;
-        let _cheapest = Number.POSITIVE_INFINITY;
-
-        let _node = document.getElementById("listings");
-        //reads raw location from html because js is weird
-        let query = db.collection("spots").where("geoloc", "<=", greaterGeoloc);
-        query = query.where("geoloc", ">=", lesserGeoloc);
-        query.get().then(function(querySnapshot) {
-          if (querySnapshot.empty) { console.log("No documents found!"); }
-          else {
-            querySnapshot.forEach(function(doc) {
-              _count += 1;
-              document.getElementById('spot-count').textContent = "Number of spots near this location: "+ _count.toString();
-              if (_cheapest > doc.data().price) { 
-                _cheapest = doc.data().price;
-                document.getElementById('spot-cheap').textContent = "Cheapest spot near this location: $"+ _cheapest.toString();
-              }
-
-              if (document.getElementById(doc.id) == null) {
-                // if spot id not found in list
-                
-                // pop entire list once only
-                if (_count == 1)
-                  while (_node.firstChild)
-                    _node.removeChild(_node.firstChild);
-                
-                // create list
-              
-                let newLi = document.createElement("li");
-                newLi.id = doc.id;
-                newLi.className = "collapsible";
-                newLi.appendChild(document.createTextNode("$"+doc.data().price+" - "+doc.data().location));
-                
-                let newDiv = document.createElement("div");
-                newDiv.className = "content";
-                
-                let newP = document.createElement("p");
-                newP.appendChild(document.createTextNode("Description: " + doc.data().description));
-                newDiv.appendChild(newP);
-                
-                let newerP = document.createElement("p");
-                newerP.appendChild(document.createTextNode("Owner: " + doc.data().owner));
-                newDiv.appendChild(newerP);
-                
-                //partially sort during list creation
-                if (_node.firstChild != null && parseFloat(newLi.textContent.substring(1,newLi.textContent.length)) < parseFloat(_node.firstChild.textContent.substring(1,_node.firstChild.textContent.length)))
-                  _node.insertBefore(newLi,_node.firstChild);
-                else _node.appendChild(newLi);
-                
-                if (doc.data().userid === user.uid) {
-                  let oops = document.createElement("p");
-                  oops.appendChild(document.createTextNode("You are the owner of this spot!"));
-                  newDiv.appendChild(oops);
-                }
-                else {
-                  let newBtn = document.createElement("button");
-                  newBtn.appendChild(document.createTextNode("Reserve this spot"));
-                  newBtn.id = doc.id + "-reserve";
-                  newBtn.addEventListener('click',function() {
-                    ReserveSpot(doc);
-                  },false);
-                  newDiv.appendChild(newBtn);
-                }
-                
-                newLi.appendChild(newDiv);
-                
-                newLi.addEventListener("click",function() {
-                  this.classList.toggle("active");
-                  let content = this.firstChild;
-                  content = content.nextElementSibling;
-                  if (content.style.maxHeight) {
-                    content.style.maxHeight = null;
-                  } else {
-                    content.style.maxHeight = content.scrollHeight + "px";
-                  }
-                });
-              }
-
-              
-            });
-          }
-        })        
-        .then(() => {
-          //finish sorting the partially sorted list
-          let b = _node.getElementsByTagName("LI");
-          let switching = true;
-          while(switching) {
-            switching = false;
-            for (let i = 0; i < (b.length - 1); ++i) {
-              switching = (parseFloat(b[i].textContent.substring(1,b[i].textContent.length)) > parseFloat(b[i+1].textContent.substring(1,b[i+1].textContent.length)));
-              if (switching) {
-                b[i].parentNode.insertBefore(b[i+1],b[i]);
-                //console.log("Sort");
-                break;
-              }
-            }
-          }
-          document.getElementById('view-spots-button').style.display ="";
-        }).catch(error => {
-          console.error(error);
-        });
-        
-        //correctly format location and enable button
-        document.getElementById('spot-location').textContent =      "Location: " + e.features[0].properties.location;
-        //other stuff to show?
-        /*
-        document.getElementById('spot-price').textContent =       "Price:        $"+e.features[0].properties.price+"\n";
-        document.getElementById('spot-owner').textContent =       "Owner:         "+e.features[0].properties.owner+"\n";
-        document.getElementById('spot-description').textContent = "Description:   "+e.features[0].properties.description+"\n";
-        */
-       
-        //info from dataset?
-        /*
-        var userid = e.features[0].properties.uid;
-        var spotid = e.features[0].properties.id;
-        */
-        
-        const _view = function() { ViewSpots(); }
-        
-        document.getElementById('output').textContent = JSON.stringify(e.features[0]);
-        document.getElementById('view-spots-button').removeEventListener('click', _view);
-        document.getElementById('view-spots-button').addEventListener('click', _view, false);
-        
-      });         
-
-/////////////// change cursor to pointer when it mouses over a spot////////////////////////////
-      var popup;
-      map.on('mouseenter', 'spots', function (e) {
-        map.getCanvas().style.cursor = 'pointer';
-        
-///////////// add popup containing location upon mouse over ///////////////////////////////        
-        var coords = e.features[0].geometry.coordinates.slice();
-        var loc = e.features[0].properties.location;
-        while (Math.abs(e.lngLat.lng - coords[0]) > 180) {
-          coords[0] += e.lngLat.lng > coords[0] ? 360 : -360;
-        }
-        popup = new mapboxgl.Popup({closeButton: false}).setLngLat(coords).setHTML(loc).addTo(map);
-      });
-
-/////////////// change it back to hand and remove popup //////////////////////////////////////////////
-      map.on('mouseleave', 'spots', function () {
-        map.getCanvas().style.cursor = '';
-        popup.remove();
-      });
-      // Initialize the FirebaseUI Widget using Firebase.
-      // The start method will wait until the DOM is loaded.   
-          
+*/        
+  
 ///////////// listen to geocoder for result ///////////////////////////////////////////////////////////
         geocoder.on('result', function(ev) {
             if (ev.result.properties.address == null && ev.result.address == null) {
 
             // if it isnt an address (like just the name of a city)
               // display message
-              document.getElementById('output').textContent = JSON.stringify(ev.result);
-
+              document.getElementById('address').textContent = "This isn't an address!";
+              document.getElementById('add-spot').setAttribute('disabled', 'disabled');
+               
             }
             else {
-            
+              var promises = [Promise.resolve(ev), db.doc('users/'+user.uid).get()]
+              return Promise.all(promises).then (results => {
             // if it is an address or usable location
-              document.getElementById('output').textContent = JSON.stringify(ev.result); 
-              var result = ev.result;
+                document.getElementById('address').textContent = ev.result.place_name; 
+                var _tempPrice = function() { if (Number(document.getElementById('price').value) > 0 && Number(document.getElementById('price').value) <= 1000.00 && document.getElementById('description').value && results[1].data().hasPaymentInfo)
+                                                  document.getElementById('add-spot').removeAttribute('disabled');
+                                            else document.getElementById('add-spot').setAttribute('disabled','disabled'); }
+                var _tempDesc = function()  { if (Number(document.getElementById('price').value) <= 1000.00 && Number(document.getElementById('price').value) > 0 && document.getElementById('description').value && results[1].data().hasPaymentInfo)
+                                                  document.getElementById('add-spot').removeAttribute('disabled');
+                                            else document.getElementById('add-spot').setAttribute('disabled','disabled'); }
+                if (Number(document.getElementById('price').value) > 0 && Number(document.getElementById('price').value) <= 1000.00 && document.getElementById('description').value && results.data().hasPaymentInfo)
+                  document.getElementById('add-spot').removeAttribute('disabled');
+                else {
+                  document.getElementById('price').removeEventListener('input',_tempPrice);
+                  document.getElementById('description').removeEventListener('input',_tempDesc);
+                
+                  document.getElementById('description').addEventListener('input',_tempDesc,false);
+                  document.getElementById('price').addEventListener('input',_tempPrice,false);
+                }
+                var _tempAdd = function() {
               
+                  if (Number(document.getElementById('price').value) > 0 && Number(document.getElementById('price').value) <= 1000.00 && document.getElementById('description').value && results[1].data().hasPaymentInfo) {
+                    AddSpot(ev.result, document.getElementById('price').value, document.getElementById('description').value);
+                    document.getElementById('error').textContent = "Success! Spot post request submitted.";
+                    document.getElementById('price').value = "";
+                    document.getElementById('description').value = "";
+                  }
+                  else document.getElementById('error').textContent = "ERROR! Spot post request not submitted.";
+                  if (!Number(document.getElementById('price').value)) document.getElementById('price').value = "";
+                  document.getElementById('add-spot').setAttribute('disabled','disabled');
+                  geocoder.setInput("");
+                  document.getElementById('price').removeEventListener('input',_tempPrice);
+                  document.getElementById('description').removeEventListener('input',_tempDesc);
+                  document.getElementById('add-spot').removeEventListener('click',_tempAdd);
+                }
+                document.getElementById('add-spot').addEventListener('click',_tempAdd,false);
+              }).catch(error => { console.log(error); });
             }
         });
-
+/////////////////// description auto sizer ///////////////////////
+    document.getElementById("description").addEventListener('input', function() {
+        textarea = this;
+        textareaRows = textarea.value.split("\n");
+        if(textareaRows[0] != "undefined" && textareaRows.length < 15) counter = textareaRows.length;
+        else if(textareaRows.length >= 15) counter = 15;
+        else counter = 1;
+        textarea.rows = counter; }, false);
  
 ////////////// cloud function call examples //////////////////////////////////////////////////////////////////////////////////////////////
             // can easily add support for more properties
@@ -373,7 +218,7 @@
           //   document.getElementById("add-spot-button").removeEventListener('click', _add);
           //   document.getElementById("add-spot-button").addEventListener('click', _add, false);
           // }
-          /*
+
           var addSpot = firebase.functions().httpsCallable('addSpot');
           function AddSpot(geojson, price, description) {
               if (!geojson) { document.getElementById('location').textContent = "** Please select a valid location"; }
@@ -391,7 +236,7 @@
                 });
               }
           }
-          */
+
           
           // UpdateSpot only works if current authenticated userid === the userid in the spots/<spotid> document.
           // Can only change description and price.
@@ -455,38 +300,35 @@
       <div id="firebaseui-auth-container"></div><!--must stay for signout functionality-->
       <div class="misc-buttons">
         <button class = "btn btn-primary" id = "sign-out-button" align = "left"><i class="fa fa-sign-out"></i>Logout</button>
-        <button class = "btn btn-primary" id = "add-spot-button" align = "right">Add a spot</button>
+        <!--button class = "btn btn-primary" id = "add-spot-button" align = "right">Add a spot</button-->
         <button class = "btn btn-primary" id = "user-page-button" align = "center">Vew my user page</button>
-        <!--button class = "btn btn-primary" id = "view-listings-button"><i class="fa fa-sign-out"></i>View Listings</button-->
+        <button class = "btn btn-primary" id = "view-listings-button">View Listings</button>
       </div>
-    <h1>Listings</h1>
+      <h1>Choose an Area</h1>
 
-    <div class="wrapper" id="wrapper">
-      <div class="center">
-        <div id="map"></div>
-      </div>
-	</div>
-    <div>
-      <div class="center">
-        <div id="geocoder" class="geocoder"></div>
-		<div id="spot-info">
-          <div id="spot-location" ></div>
-          <div id="spot-description" ></div>
-          <div id="spot-price" ></div>
-          <div id="spot-owner" ></div>
-          <div id="spot-count" ></div>
-          <div id="spot-cheap" ></div>
-          <button class = "btn btn-primary" id = "view-spots-button" style="display:none">View spots near this location</button>
+      <div class="wrapper" id="wrapper" style="display:none">
+        <div class="center" style="display:none">
+            <div id="map" style="display:none"></div>
         </div>
       </div>
-
-	<div id = "output" style = "display:none"></div>
+      <div>
+        <div class="center">
+          <div id="geocoder" class="geocoder"></div>
+          <p id="address"></p>
+          <p>Description:</p>
+          <textarea id = "description" style="width:50%;resize:none;height:auto;" placeholder = "Enter Parking Spot Description... such as hours available, indoor/outdoor, spot number/location..." required></textarea><br/>
+          <p style="display:inline-block">Price (USD):</p>
+		  <input id = "price" placeholder = "0.00 < price <= 1000.00" type = "number" step="0.01" min="0.01" max="1000.00" required></input><br/>
+          <button class = "btn btn-primary" id = "add-spot" disabled>Post spot</button>
+		</div>
+      </div>
+      <div id = "error"></div>
+	  <div id = "output" style = "display:none"></div>
 	  <div id="listings-div" style="display:none">
         <ul id="listings" style="padding-left:0;list-style:none;"></ul>
         <button class = "btn btn-primary" id = "back-button">Back to all listings</button>
       </div>
     </div>
-	
-   </div>
   </body>
 </html>
+
