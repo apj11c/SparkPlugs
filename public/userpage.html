@@ -30,7 +30,18 @@
   <link type="text/css" rel="stylesheet" href="https://cdn.firebase.com/libs/firebaseui/3.4.1/firebaseui.css" />
   
   <style>
-        #everything{position:absolute;top:0px;bottom:0px;left:0px;right:0px;}
+	html, body{
+		background-color: #cccccc;
+	}
+        #everything{
+		position:absolute;
+		top:0px;
+		bottom:0px;
+		left:0px;
+		right:0px;
+		padding-left:100px;
+		padding-right:100px;
+	}
         .wrapper{position:relative;height:50vh;}
         .right{width:25%; position:absolute; top:0px; bottom:0px;}
         .left {width:75%; position:absolute; top:0px; bottom:0px;}
@@ -212,7 +223,17 @@
             }).catch(error => {
               console.log(error);
             });
-            
+ 
+/////////////////// functions ///////////////////////////////////    
+
+    document.getElementById("spot-description").addEventListener('input', function() {
+        textarea = this;
+        textareaRows = textarea.value.split("\n");
+        if(textareaRows[0] != "undefined" && textareaRows.length < 15) counter = textareaRows.length;
+        else if(textareaRows.length >= 15) counter = 15;
+        else counter = 1;
+        textarea.rows = counter; }, false);
+///////////////////////////////////////////////////////////////////        
             document.getElementById("everything").style.display = "";
             window.dispatchEvent(new Event('resize'));
             document.getElementById("page-title").textContent = firebase.auth().currentUser.providerData[0].displayName+"'s profile";
@@ -259,7 +280,7 @@
                 document.getElementById("spot-description").value = doc.data().description;
                 document.getElementById("spot-timestamp").textContent = "timestamp: "+doc.data().timestamp;
                 document.getElementById("spot-id").textContent = "spotid: "+doc.id;
-                document.getElementById("spot-description").dispatchEvent(document.createEvent("UIEvents").initUIEvent("input",true,true));
+                document.getElementById("spot-description").dispatchEvent(new Event('input', { 'bubbles': true, 'cancelable': true}));
               });
               document.getElementById("current-listings-body").appendChild(newTr);
             });
@@ -323,15 +344,6 @@
             if () list.sort('price', {order: "asc"});
             else list.sort('price', {order: "desc"});
           });*/
-/////////////////// functions ///////////////////////////////////    
-
-    document.getElementById("spot-description").addEventListener('input', function() {
-        textarea = this;
-        textareaRows = textarea.value.split("\n");
-        if(textareaRows[0] != "undefined" && textareaRows.length < 15) counter = textareaRows.length;
-        else if(textareaRows.length >= 15) counter = 15;
-        else counter = 1;
-        textarea.rows = counter; }, false);
 
 /////////////////// event listeners for buttons ////////////////////////////////
           var originalDescription;
