@@ -328,17 +328,15 @@
               }
               else (console.error("Document missing buy/sell bool"));
             });
+          }).then(() => {
+            var options = {
+              valueNames: [ 'price', 'location', 'timestamp' ]
+            };
+            var userListings = new List('user-listings-div', options);
           }).catch(error => {
             console.error(error)
           });
   
-
-
-          var options = {
-            valueNames: [ 'price', 'location', 'timestamp' ]
-          };
-
-          var userListings = new List('user-listings-div', options);
 
           /*document.getElementById("sort-price").addEventListener('click, function() {
             if () list.sort('price', {order: "asc"});
