@@ -241,7 +241,7 @@
             if (!user.emailVerified) document.getElementById("auth-email").textContent = "Email: " + user.email + " (unverified)";
             else document.getElementById("auth-email").textContent = "Email: " + user.email + " (verified)";
             document.getElementById("auth-user-id").textContent = "Userid: " + user.uid;
-            document.getElementById("auth-photo-url").textContent = "Photo URL: " + firebase.auth().currentUser.providerData[0].photoURL;
+            document.getElementById("auth-photo-url").src = firebase.auth().currentUser.providerData[0].photoURL;
             document.getElementById("auth-phone-number").textContent = "Phone number: " + user.phoneNumber;
             return db.collection("users").doc(user.uid).get();
           }).then(docRef => {
@@ -568,14 +568,14 @@
       <div id="firebaseui-auth-container"></div><!--must stay for signout functionality-->
       <div class="wrapper" id="wrapper">
           <div class="left" style="overflow:auto">
-              <h1 id = "page-title" style="vertical-align:middle;"></h1>
+              <img id="auth-photo-url" style="display:inline-block;" height="75px"></img>
+              <h1 id = "page-title" style="vertical-align:middle;display:inline-block;"></h1>
               <div id="user-info">
                   <div id="auth-display-name"></div>
                   <div id="auth-email"></div>
-                  <div id="auth-email-verified"></div>
-                  <div id="auth-photo-url"></div>
+                  <!--div id="auth-email-verified"></div-->
                   <div id="auth-user-id"></div>
-                  <div id="auth-phone-number"></div>
+                  <div style="display:none" id="auth-phone-number"></div>
                   <div id="payment-info-bool"></div>
                   <button id="toggle-payment-info">Toggle payment info bool</button>
                   <div id="edit-error"></div>
