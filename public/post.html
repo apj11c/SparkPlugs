@@ -144,6 +144,7 @@
   
 ///////////// listen to geocoder for result ///////////////////////////////////////////////////////////
         geocoder.on('result', function(ev) {
+            document.getElementById('output').textContent = JSON.stringify(ev.result);
             if (ev.result.properties.address == null && ev.result.address == null) {
 
             // if it isnt an address (like just the name of a city)
@@ -176,14 +177,14 @@
               
                   if (Number(document.getElementById('price').value) > 0 && Number(document.getElementById('price').value) <= 1000.00 && document.getElementById('description').value && results[1].data().hasPaymentInfo) {
                     AddSpot(ev.result, document.getElementById('price').value, document.getElementById('description').value);
-                    document.getElementById('error').textContent = "Success! Spot post request submitted.";
-                    document.getElementById('price').value = "";
-                    document.getElementById('description').value = "";
+                    //document.getElementById('error').textContent = "Success! Spot post request submitted.";
                   }
-                  else document.getElementById('error').textContent = "ERROR! Spot post request not submitted.";
+                  else { } //document.getElementById('error').textContent = "ERROR! Spot post request not submitted.";
                   if (!Number(document.getElementById('price').value)) document.getElementById('price').value = "";
                   document.getElementById('add-spot').setAttribute('disabled','disabled');
                   geocoder.setInput("");
+                  document.getElementById('price').value = "";
+                  document.getElementById('description').value = "";
                   document.getElementById('price').removeEventListener('input',_tempPrice);
                   document.getElementById('description').removeEventListener('input',_tempDesc);
                   document.getElementById('add-spot').removeEventListener('click',_tempAdd);

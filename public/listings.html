@@ -92,6 +92,14 @@
           const dataseturl = 'https://api.mapbox.com/datasets/v1/wosteen417/cjoao2i3108mc32o7yu31rc0d/features?access_token=pk.eyJ1Ijoid29zdGVlbjQxNyIsImEiOiJjam9hbnU2YXIwM3V6M3BydGVsZzM0NDh0In0.pUYgvlGhW5rYsfx8wCnP6g.geojson';
 
 /////////////////// functions ///////////////////////////////////    
+          function toDegrees (angle) {
+            return angle * (180 / Math.PI);
+          }
+          
+          function toRadians (angle) {
+            return angle * (Math.PI / 180);
+          }
+
           function ViewSpots() {
             document.getElementById('listings-div').style.display = "";
             document.getElementById('spot-info').style.display = "none";
@@ -178,7 +186,7 @@
         }
       });
 */
-
+   
 //////////// fill element data upon spot click //////////////////////////////////////
       map.on('click', 'spots', function(e) {
          //stores raw location in html because js is weird
@@ -187,8 +195,8 @@
         document.getElementById('spot-cheap').textContent = "Cheapest spot near this location: ...";
         let latitude = parseFloat(e.features[0].geometry.coordinates[1]);
         let longitude = parseFloat(e.features[0].geometry.coordinates[0]);
-        let greaterGeoloc = new firebase.firestore.GeoPoint(latitude+0.006,longitude+0.016);
-        let lesserGeoloc = new firebase.firestore.GeoPoint(latitude-0.006,longitude-0.016);
+        let greaterGeoloc = new firebase.firestore.GeoPoint(latitude+0.015,longitude+0.015);
+        let lesserGeoloc = new firebase.firestore.GeoPoint(latitude-0.015,longitude-0.015);
         
         let _count = 0;
         let _cheapest = Number.POSITIVE_INFINITY;
